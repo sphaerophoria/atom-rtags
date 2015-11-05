@@ -1,10 +1,9 @@
 {
   "name": "atom-rtags",
   "main": "./lib/atom-rtags",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Rtags support for Atom Editor",
-  "keywords": [
-  ],
+  "keywords": [],
   "repository": "https://github.com/rajendrant/atom-rtags",
   "license": "MIT",
   "engines": {
