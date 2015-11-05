@@ -1,0 +1,22 @@
+# See https://atom.io/docs/latest/hacking-atom-package-word-count#menus for more details
+'context-menu':
+  'atom-text-editor': [
+  ]
+'menu': [
+  {
+    'label': 'Packages'
+    'submenu': [
+      'label': 'atom-rtags'
+      'submenu': [
+        {
+          'label': 'Find Symbol at point'
+          'command': 'atom-rtags:find_symbol_at_point'
+        },
+        {
+          'label': 'Find References at point'
+          'command': 'atom-rtags:find_references_at_point'
+        }
+      ]
+    ]
+  }
+]
