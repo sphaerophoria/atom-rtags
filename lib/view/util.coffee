@@ -22,6 +22,6 @@ module.exports =
 
   getSearchResultsMessage: ({findPattern, matchCount, pathCount, replacedPathCount}) ->
     if matchCount
-      "#{_.pluralize(matchCount, 'result')} found in #{_.pluralize(pathCount, 'file')} for <span class=\"highlight-info\">#{@sanitizePattern(findPattern)}</span>"
+      "#{_.pluralize(matchCount, 'reference')} in #{_.pluralize(pathCount, 'file')} for <span class=\"highlight-info\">#{@sanitizePattern(findPattern)}</span>"
     else
-      "No #{if replacedPathCount? then 'more' else ''} results found for '#{@sanitizePattern(findPattern)}'"
+      "No #{if replacedPathCount? then 'more' else ''} references found for '#{@sanitizePattern(findPattern)}'"

@@ -1,7 +1,7 @@
 {
   "name": "atom-rtags",
   "main": "./lib/atom-rtags",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "Rtags support for Atom Editor",
   "keywords": [
   ],
@@ -12,9 +12,7 @@
   },
   "dependencies": {
     "atom-space-pen-views": "latest",
-    "jquery": "^2.0.0",
     "fs-plus": "2.x",
-    "temp": "0.8.1",
     "underscore-plus": "1.x"
   }
 }

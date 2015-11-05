@@ -29,7 +29,6 @@ class AtomRtagsReferencesModel
     @findOptions = new FindOptions
 
   setModel: (@model) ->
-    #@emitter.emit 'onResultChange', true
     @results = {}
     @paths = []
     {res, @pathCount, @matchCount, @symbolName, symbolLength} = @model
@@ -48,8 +47,6 @@ class AtomRtagsReferencesModel
       filePathInsertedIndex++
     @emitter.emit 'did-finish-searching', @getResultsSummary()
 
-  onResultChange: (callback) -> @emitter.on 'onResultChange', callback
-
   onDidClear: (callback) ->
     @emitter.on 'did-clear', callback
 
@@ -62,14 +59,8 @@ class AtomRtagsReferencesModel
   onDidSearchPaths: (callback) ->
     @emitter.on 'did-search-paths', callback
 
-  onDidClearSearchState: (callback) ->
-    @emitter.on 'did-clear-search-state', callback
-
-  onDidAddResult: (callback) ->
-    @emitter.on 'did-add-result', callback
-
-  onDidRemoveResult: (callback) ->
-    @emitter.on 'did-remove-result', callback
+  onDidErrorForPath: (callback) ->
+    @emitter.on 'did-error-for-path', callback
 
   onDidStartSearching: (callback) ->
     @emitter.on 'did-start-searching', callback
@@ -79,6 +70,12 @@ class AtomRtagsReferencesModel
 
   onDidFinishSearching: (callback) ->
     @emitter.on 'did-finish-searching', callback
+
+  onDidAddResult: (callback) ->
+    @emitter.on 'did-add-result', callback
+
+  onDidRemoveResult: (callback) ->
+    @emitter.on 'did-remove-result', callback
 
   getResultsSummary: ->
     res = { findPattern:@symbolName,
