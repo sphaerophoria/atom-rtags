@@ -1,5 +1,5 @@
 _ = require 'underscore-plus'
-{Disposable, CompositeDisposable, Emitter} = require 'atom'
+{Emitter} = require 'atom'
 #escapeHelper = require '../escape-helper'
 
 class Result
@@ -19,8 +19,8 @@ class FindOptions
     @caseSensitive = false
     @wholeWord = false
     @inCurrentSelection = false
-  onDidChange: (callback) ->
-  onDidChangeReplacePattern: (callback) ->
+  onDidChange: (callback) ->  @emitter.on('did-change', callback)
+  onDidChangeReplacePattern: (callback) ->  @emitter.on('did-change-replacePattern', callback)
 
 module.exports =
 class AtomRtagsReferencesModel

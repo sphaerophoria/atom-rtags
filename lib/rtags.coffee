@@ -4,7 +4,7 @@ fn_loc = (fn, loc) ->
   fn + ':' + (loc.row+1) + ':' + (loc.column+1)
 
 rc_exec =  (opt, stdin) ->
-  cmd = 'rc ' + opt.join(' ')
+  cmd = 'rc --no-color ' + opt.join(' ')
   #console.log 'exec ' + cmd
   out = child_process.execSync cmd
   return out.toString()

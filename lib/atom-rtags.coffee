@@ -5,7 +5,6 @@ AtomRtagsReferencesView = require './view/results-pane'
 rtags = require './rtags'
 
 module.exports = AtomRtags =
-  referencesView: null
   subscriptions: null
 
   activate: (state) ->
@@ -23,8 +22,10 @@ module.exports = AtomRtags =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_references_at_point': => @find_references_at_point()
 
   deactivate: ->
-    @subscriptions.dispose()
-    @referencesView.destroy()
+    AtomRtagsReferencesView.model = null
+    @referencesModel = null
+    @subscriptions?.dispose()
+    @subscriptions = null
 
   find_symbol_at_point: ->
     active_editor = atom.workspace.getActiveTextEditor()
