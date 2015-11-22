@@ -4,7 +4,8 @@ fn_loc = (fn, loc) ->
   fn + ':' + (loc.row+1) + ':' + (loc.column+1)
 
 rc_exec =  (opt, stdin) ->
-  cmd = 'rc --no-color ' + opt.join(' ')
+  rc_cmd = atom.config.get 'atom-rtags.rcCommand'
+  cmd = rc_cmd + ' --no-color ' + opt.join(' ')
   #console.log 'exec ' + cmd
   out = child_process.execSync cmd
   return out.toString()
@@ -21,7 +22,8 @@ module.exports =
     res = {}
     matchCount = pathCount = 0
     for line in out.split "\n"
-      [fn, row, col, strline] = line.split ":"
+      [fn, row, col, strline...] = line.split ":"
+      strline = strline.join ':'
       if fn and row and col
         if not res[fn]?
           res[fn] = []

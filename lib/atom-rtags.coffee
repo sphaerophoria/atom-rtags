@@ -5,6 +5,15 @@ AtomRtagsReferencesView = require './view/results-pane'
 rtags = require './rtags'
 
 module.exports = AtomRtags =
+  config:
+    rcCommand:
+      type: 'string'
+      default: 'rc'
+    openFindReferencesResultsInRightPane:
+      type: 'boolean'
+      default: false
+      description: 'Open the find references results in a split pane instead of a tab in the same pane.'
+
   subscriptions: null
 
   activate: (state) ->
@@ -40,6 +49,7 @@ module.exports = AtomRtags =
       if res.matchCount == 1
         for uri, v of res.res
           atom.workspace.open uri, {'initialLine': v[0], 'initialColumn':v[1]}
-      options = {searchAllPanes: true, split:'right'}
+      options = {searchAllPanes: true}
+      options.split = 'right' if atom.config.get('atom-rtags.openFindReferencesResultsInRightPane')
       @referencesModel.setModel res
       atom.workspace.open AtomRtagsReferencesView.URI, options

@@ -43,7 +43,7 @@ class MatchView extends View
       @matchText.removeClass('highlight-error').addClass('highlight-info')
 
   confirm: ->
-    openInRightPane = atom.config.get('find-and-replace.openProjectFindResultsInRightPane')
+    openInRightPane = atom.config.get('atom-rtags.openFindReferencesResultsInRightPane')
     options = {}
     options = {split: 'left'} if openInRightPane
     options.initialLine = @match.range[0][0]
