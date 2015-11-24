@@ -1,7 +1,7 @@
 {
   "name": "atom-rtags",
   "main": "./lib/atom-rtags",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Rtags support for Atom Editor",
   "keywords": [],
   "repository": "https://github.com/rajendrant/atom-rtags",
