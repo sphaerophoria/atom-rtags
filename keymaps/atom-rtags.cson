@@ -10,3 +10,5 @@
 'atom-workspace':
   'ctrl-\'': 'atom-rtags:find_symbol_at_point'
   'ctrl-"': 'atom-rtags:find_references_at_point'
+  'ctrl-{': 'atom-rtags:location_stack_back'
+  'ctrl-}': 'atom-rtags:location_stack_forward'

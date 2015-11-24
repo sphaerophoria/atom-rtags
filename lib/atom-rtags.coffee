@@ -4,6 +4,11 @@ AtomRtagsReferencesModel = require './atom-rtags-model'
 AtomRtagsReferencesView = require './view/results-pane'
 rtags = require './rtags'
 
+matched_scope = (editor) ->
+  for s in ['source.cpp', 'source.c']
+    return true if s in editor.getRootScopeDescriptor().scopes
+  return false
+
 module.exports = AtomRtags =
   config:
     rcCommand:
@@ -29,6 +34,9 @@ module.exports = AtomRtags =
     # Register commands
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_symbol_at_point': => @find_symbol_at_point()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_references_at_point': => @find_references_at_point()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:location_stack_forward': => @location_stack_forward()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:location_stack_back': => @location_stack_back()
+    @location = {index:0, stack:[]}
 
   deactivate: ->
     AtomRtagsReferencesView.model = null
@@ -39,12 +47,17 @@ module.exports = AtomRtags =
   find_symbol_at_point: ->
     active_editor = atom.workspace.getActiveTextEditor()
     if active_editor
+      return if not matched_scope(active_editor)
       [uri, r, c] = rtags.find_symbol_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
+      @location.stack.length = @location.index
+      @location.stack.push [active_editor.getPath(), active_editor.getCursorBufferPosition()]
+      @location.index = @location.stack.length
       atom.workspace.open uri, {'initialLine': r, 'initialColumn':c}
 
   find_references_at_point: ->
     active_editor = atom.workspace.getActiveTextEditor()
     if active_editor
+      return if not matched_scope(active_editor)
       res = rtags.find_references_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
       if res.matchCount == 1
         for uri, v of res.res
@@ -53,3 +66,21 @@ module.exports = AtomRtags =
       options.split = 'right' if atom.config.get('atom-rtags.openFindReferencesResultsInRightPane')
       @referencesModel.setModel res
       atom.workspace.open AtomRtagsReferencesView.URI, options
+
+  print_location: ->
+    console.log 'location', @location.index
+    for l in @location.stack
+      console.log l[0], l[1].row
+
+  location_stack_jump: (howmuch) ->
+    loc =  @location.stack[@location.index+howmuch]
+    if loc
+      console.log 'opening', loc[0], loc[1].row
+      atom.workspace.open loc[0], {'initialLine': loc[1].row, 'initialColumn':loc[1].column}
+      @location.index += howmuch
+
+  location_stack_forward: ->
+    @location_stack_jump +1
+
+  location_stack_back: ->
+    @location_stack_jump -1
