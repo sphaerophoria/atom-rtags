@@ -1,4 +1,4 @@
-{CompositeDisposable} = require 'atom'
+{CompositeDisposable, Notifictaion} = require 'atom'
 # {AtomRtagsReferencesModel, AtomRtagsReferencesView} = require './atom-rtags-references-view'
 AtomRtagsReferencesModel = require './atom-rtags-model'
 AtomRtagsReferencesView = require './view/results-pane'
@@ -18,6 +18,10 @@ module.exports = AtomRtags =
       type: 'boolean'
       default: false
       description: 'Open the find references results in a split pane instead of a tab in the same pane.'
+    rdmCommand:
+      type: 'string'
+      default: ''
+      description: 'Command to run to start the rdm server. If empty rdm server will not be autospawned, and should be started manually.'
 
   subscriptions: null
 
@@ -43,18 +47,23 @@ module.exports = AtomRtags =
     @referencesModel = null
     @subscriptions?.dispose()
     @subscriptions = null
+    @location = null
 
   find_symbol_at_point: ->
-    active_editor = atom.workspace.getActiveTextEditor()
-    if active_editor
+    try
+      active_editor = atom.workspace.getActiveTextEditor()
+      return if not active_editor
       return if not matched_scope(active_editor)
       @location_stack_push()
       [uri, r, c] = rtags.find_symbol_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
       atom.workspace.open uri, {'initialLine': r, 'initialColumn':c}
+    catch err
+      atom.notifications.addError err
 
   find_references_at_point: ->
-    active_editor = atom.workspace.getActiveTextEditor()
-    if active_editor
+    try
+      active_editor = atom.workspace.getActiveTextEditor()
+      return if not active_editor
       return if not matched_scope(active_editor)
       @location_stack_push()
       res = rtags.find_references_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
@@ -65,6 +74,8 @@ module.exports = AtomRtags =
       options.split = 'right' if atom.config.get('atom-rtags.openFindReferencesResultsInRightPane')
       @referencesModel.setModel res
       atom.workspace.open AtomRtagsReferencesView.URI, options
+    catch err
+      atom.notifications.addError err
 
   location_stack_jump: (howmuch) ->
     loc =  @location.stack[@location.index+howmuch]
@@ -78,11 +89,13 @@ module.exports = AtomRtags =
   location_stack_back: ->
     if @location.stack.length == @location.index
       @location_stack_push()
-    @location_stack_jump -1
+      @location_stack_jump -2
+    else
+      @location_stack_jump -1
 
   location_stack_push: ->
     active_editor = atom.workspace.getActiveTextEditor()
-    if active_editor
-      @location.stack.length = @location.index
-      @location.stack.push [active_editor.getPath(), active_editor.getCursorBufferPosition()]
-      @location.index = @location.stack.length
+    return if not active_editor
+    @location.stack.length = @location.index
+    @location.stack.push [active_editor.getPath(), active_editor.getCursorBufferPosition()]
+    @location.index = @location.stack.length
