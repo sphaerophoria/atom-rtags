@@ -48,16 +48,15 @@ module.exports = AtomRtags =
     active_editor = atom.workspace.getActiveTextEditor()
     if active_editor
       return if not matched_scope(active_editor)
+      @location_stack_push()
       [uri, r, c] = rtags.find_symbol_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
-      @location.stack.length = @location.index
-      @location.stack.push [active_editor.getPath(), active_editor.getCursorBufferPosition()]
-      @location.index = @location.stack.length
       atom.workspace.open uri, {'initialLine': r, 'initialColumn':c}
 
   find_references_at_point: ->
     active_editor = atom.workspace.getActiveTextEditor()
     if active_editor
       return if not matched_scope(active_editor)
+      @location_stack_push()
       res = rtags.find_references_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
       if res.matchCount == 1
         for uri, v of res.res
@@ -67,15 +66,9 @@ module.exports = AtomRtags =
       @referencesModel.setModel res
       atom.workspace.open AtomRtagsReferencesView.URI, options
 
-  print_location: ->
-    console.log 'location', @location.index
-    for l in @location.stack
-      console.log l[0], l[1].row
-
   location_stack_jump: (howmuch) ->
     loc =  @location.stack[@location.index+howmuch]
     if loc
-      console.log 'opening', loc[0], loc[1].row
       atom.workspace.open loc[0], {'initialLine': loc[1].row, 'initialColumn':loc[1].column}
       @location.index += howmuch
 
@@ -83,4 +76,13 @@ module.exports = AtomRtags =
     @location_stack_jump +1
 
   location_stack_back: ->
+    if @location.stack.length == @location.index
+      @location_stack_push()
     @location_stack_jump -1
+
+  location_stack_push: ->
+    active_editor = atom.workspace.getActiveTextEditor()
+    if active_editor
+      @location.stack.length = @location.index
+      @location.stack.push [active_editor.getPath(), active_editor.getCursorBufferPosition()]
+      @location.index = @location.stack.length

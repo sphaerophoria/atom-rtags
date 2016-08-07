@@ -31,14 +31,15 @@ module.exports =
         res[fn].push [row-1, col-1, strline]
         matchCount++
     {
-      res, pathCount, matchCount, symbolName:info.SymbolName,
-      symbolLength:Number(info.SymbolLength)
+      res, pathCount, matchCount, symbolName:info,
+      symbolLength:info.length
     }
 
   get_symbol_info: (fn, loc) ->
-    out = rc_exec ['-U', fn_loc(fn, loc)]
-    res = {}
+    out = rc_exec ['-r', fn_loc(fn, loc)]
     for line in out.split "\n"
-      [k, v] = line.split ":"
-      res[k] = v
-    res
+      [fn, row, col, strline...] = line.split ":"
+      strline = strline.join ':'
+      strline = strline.slice(col)
+      return strline.slice(0, strline.search(/[^a-zA-Z0-9_]/))
+    ""
