@@ -42,6 +42,7 @@ module.exports = AtomRtags =
     # Register commands
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_symbol_at_point': => @find_symbol_at_point()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_references_at_point': => @find_references_at_point()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_virtuals_at_point': => @find_virtuals_at_point()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:location_stack_forward': => @location_stack_forward()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:location_stack_back': => @location_stack_back()
     @location = {index:0, stack:[]}
@@ -71,17 +72,18 @@ module.exports = AtomRtags =
       return if not matched_scope(active_editor)
       @location_stack_push()
       res = rtags.find_references_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
-      if res.matchCount == 1
-        for uri, v of res.res
-          atom.workspace.open uri, {'initialLine': v[0], 'initialColumn':v[1]}
-      options = {searchAllPanes: true}
-      switch atom.config.get('atom-rtags.openResultsWindowLocation')
-          when 'tab' then null
-          when 'rightPane' then options.split = 'right'
-          when 'downPane' then options.split = 'down'
-          else null
-      @referencesModel.setModel res
-      atom.workspace.open AtomRtagsReferencesView.URI, options
+      @display_results_in_references(res)
+    catch err
+      atom.notifications.addError err
+
+  find_virtuals_at_point: ->
+    try
+      active_editor = atom.workspace.getActiveTextEditor()
+      return if not active_editor
+      return if not matched_scope(active_editor)
+      @location_stack_push()
+      res = rtags.find_virtuals_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
+      @display_results_in_references(res)
     catch err
       atom.notifications.addError err
 
@@ -107,3 +109,16 @@ module.exports = AtomRtags =
     @location.stack.length = @location.index
     @location.stack.push [active_editor.getPath(), active_editor.getCursorBufferPosition()]
     @location.index = @location.stack.length
+
+  display_results_in_references: (res) ->
+    if res.matchCount == 1
+      for uri, v of res.res
+        atom.workspace.open uri, {'initialLine': v[0], 'initialColumn':v[1]}
+    options = {searchAllPanes: true}
+    switch atom.config.get('atom-rtags.openResultsWindowLocation')
+        when 'tab' then null
+        when 'rightPane' then options.split = 'right'
+        when 'downPane' then options.split = 'down'
+        else null
+    @referencesModel.setModel res
+    atom.workspace.open AtomRtagsReferencesView.URI, options

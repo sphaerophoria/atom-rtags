@@ -30,6 +30,32 @@ rc_exec =  (opt, retry=true) ->
       throw 'Undefined error while executing rc command\n\n'+ cmd + '\n\nOutput: ' + out
   return out.toString()
 
+extract_symbol_info_from_references = (references) ->
+  for line in references.split "\n"
+    [fn, row, col, strline...] = line.split ":"
+    strline = strline.join ':'
+    strline = strline.slice col
+    return strline.slice 0, strline.search(/[^a-zA-Z0-9_]/)
+
+format_references = (out) ->
+  info = extract_symbol_info_from_references(out)
+  res = {}
+  matchCount = pathCount = 0
+  for line in out.split "\n"
+    [fn, row, col, strline...] = line.split ":"
+    strline = strline.join ':'
+    if fn and row and col
+      if not res[fn]?
+        res[fn] = []
+        pathCount++
+      res[fn].push [row-1, col-1, strline]
+      matchCount++
+  {
+    res, pathCount, matchCount, symbolName:info,
+    symbolLength:info.length
+  }
+
+
 module.exports =
   find_symbol_at_point: (fn, loc) ->
     out = rc_exec ['--current-file='+fn, '-f', fn_loc(fn, loc), '-K']
@@ -38,33 +64,16 @@ module.exports =
 
   find_references_at_point: (fn, loc) ->
     out = rc_exec ['--current-file='+fn, '-r', fn_loc(fn, loc), '-e', '-K']
-    info = @extract_symbol_info_from_references(out)
-    res = {}
-    matchCount = pathCount = 0
-    for line in out.split "\n"
-      [fn, row, col, strline...] = line.split ":"
-      strline = strline.join ':'
-      if fn and row and col
-        if not res[fn]?
-          res[fn] = []
-          pathCount++
-        res[fn].push [row-1, col-1, strline]
-        matchCount++
-    {
-      res, pathCount, matchCount, symbolName:info,
-      symbolLength:info.length
-    }
+    format_references(out)
+
+  find_virtuals_at_point: (fn, loc) ->
+    out = rc_exec ['--current-file='+fn, '-r', fn_loc(fn, loc), '-K', '-k']
+    format_references(out)
+
 
   get_symbol_info: (fn, loc) ->
     out = rc_exec ['-r', fn_loc(fn, loc)]
     for line in out.split "\n"
-      [fn, row, col, strline...] = line.split ":"
-      strline = strline.join ':'
-      strline = strline.slice col
-      return strline.slice 0, strline.search(/[^a-zA-Z0-9_]/)
-
-  extract_symbol_info_from_references: (references) ->
-    for line in references.split "\n"
       [fn, row, col, strline...] = line.split ":"
       strline = strline.join ':'
       strline = strline.slice col
