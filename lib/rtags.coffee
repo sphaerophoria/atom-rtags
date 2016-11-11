@@ -37,8 +37,8 @@ module.exports =
     return [fn, row-1, col-1]
 
   find_references_at_point: (fn, loc) ->
-    info = @get_symbol_info(fn, loc)
     out = rc_exec ['--current-file='+fn, '-r', fn_loc(fn, loc), '-e', '-K']
+    info = @extract_symbol_info_from_references(out)
     res = {}
     matchCount = pathCount = 0
     for line in out.split "\n"
@@ -58,6 +58,13 @@ module.exports =
   get_symbol_info: (fn, loc) ->
     out = rc_exec ['-r', fn_loc(fn, loc)]
     for line in out.split "\n"
+      [fn, row, col, strline...] = line.split ":"
+      strline = strline.join ':'
+      strline = strline.slice col
+      return strline.slice 0, strline.search(/[^a-zA-Z0-9_]/)
+
+  extract_symbol_info_from_references: (references) ->
+    for line in references.split "\n"
       [fn, row, col, strline...] = line.split ":"
       strline = strline.join ':'
       strline = strline.slice col
