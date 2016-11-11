@@ -1,4 +1,5 @@
 child_process = require 'child_process'
+xml2js = require 'xml2js'
 {Notification} = require 'atom'
 
 fn_loc = (fn, loc) ->
@@ -29,6 +30,15 @@ rc_exec =  (opt, retry=true) ->
     if err.status == 1
       throw 'Undefined error while executing rc command\n\n'+ cmd + '\n\nOutput: ' + out
   return out.toString()
+
+rc_diagnostics_start = (callback) ->
+  rc_cmd = atom.config.get 'atom-rtags.rcCommand'
+  child = child_process.spawn(rc_cmd, ['--diagnostics'])
+  child.stdout.on('data', (data) ->
+    xml2js.parseString(data.toString(), (err, result) ->
+      callback(result)
+    ))
+  child
 
 extract_symbol_info_from_references = (references) ->
   for line in references.split "\n"
@@ -70,6 +80,8 @@ module.exports =
     out = rc_exec ['--current-file='+fn, '-r', fn_loc(fn, loc), '-K', '-k']
     format_references(out)
 
+  rc_diagnostics_start: (callback) ->
+    rc_diagnostics_start(callback)
 
   get_symbol_info: (fn, loc) ->
     out = rc_exec ['-r', fn_loc(fn, loc)]

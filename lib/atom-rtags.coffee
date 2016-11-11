@@ -30,6 +30,8 @@ module.exports = AtomRtags =
   subscriptions: null
 
   activate: (state) ->
+    apd = require "atom-package-deps"
+    apd.install('atom-rtags')
     atom.workspace.addOpener (filePath) ->
       new AtomRtagsReferencesView() if filePath is AtomRtagsReferencesView.URI
 
@@ -46,6 +48,7 @@ module.exports = AtomRtags =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:location_stack_forward': => @location_stack_forward()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:location_stack_back': => @location_stack_back()
     @location = {index:0, stack:[]}
+    @current_linter_messages = {}
 
   deactivate: ->
     AtomRtagsReferencesView.model = null
@@ -53,6 +56,40 @@ module.exports = AtomRtags =
     @subscriptions?.dispose()
     @subscriptions = null
     @location = null
+    @diagnostics.kill()
+
+  consumeLinter: (indieRegistry) ->
+    mylinter = indieRegistry.register {name: "Rtags Linter"}
+    @subscriptions.add(mylinter)
+
+    log = console.log.bind(console)
+    current_linter_messages=@current_linter_messages
+    update_linter = (data) ->
+      # Parse data into linter strings
+      # Linter only updates one file at a time... so every time we set messages we have to aggregate all our previous linted files
+      res = []
+      for file in data.checkstyle.file
+        current_linter_messages[file.$.name] = []
+        for error in file.error
+          if error.$.severity != "skipped" and error.$.severity != "none"
+            current_linter_messages[file.$.name].push {
+              type: error.$.severity,
+              text: error.$.message,
+              filePath: file.$.name,
+              severity: error.$.severity,
+              range: [[ error.$.line - 1, error.$.column - 1], [error.$.line - 1, error.$.column - 1]]
+            }
+
+      for k,v of current_linter_messages
+        for error in v
+          log(error)
+          res.push error
+
+      console.log(current_linter_messages)
+      console.log(res)
+      mylinter.setMessages(res)
+
+    @diagnostics = rtags.rc_diagnostics_start(update_linter)
 
   find_symbol_at_point: ->
     try

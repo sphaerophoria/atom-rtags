@@ -12,6 +12,17 @@
   "dependencies": {
     "atom-space-pen-views": "latest",
     "fs-plus": "2.x",
-    "underscore-plus": "1.x"
-  }
-}
+    "underscore-plus": "1.x",
+    "xml2js": "latest",
+    "atom-package-deps": "latest"
+  },
+  "package-deps": [
+    "linter"
+  ],
+  "consumedServices": {
+    "linter-indie": {
+      "versions": {
+        "1.0.0": "consumeLinter"
+      }
+    }
+}}
