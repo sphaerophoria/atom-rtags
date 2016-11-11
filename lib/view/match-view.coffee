@@ -45,7 +45,10 @@ class MatchView extends View
   confirm: ->
     openInRightPane = atom.config.get('atom-rtags.openFindReferencesResultsInRightPane')
     options = {}
-    options = {split: 'left'} if openInRightPane
+    switch atom.config.get('atom-rtags.openResultsWindowLocation')
+      when 'tab' then null
+      when 'rightPane' then options.split = 'left'
+      when 'downPane' then options.split = 'up'
     options.initialLine = @match.range[0][0]
     options.initialColumn = @match.range[0][1]
     atom.workspace.open(@filePath, options)

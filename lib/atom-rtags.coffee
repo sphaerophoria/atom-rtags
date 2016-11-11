@@ -14,10 +14,14 @@ module.exports = AtomRtags =
     rcCommand:
       type: 'string'
       default: 'rc'
-    openFindReferencesResultsInRightPane:
-      type: 'boolean'
-      default: false
-      description: 'Open the find references results in a split pane instead of a tab in the same pane.'
+    openResultsWindowLocation:
+      type: 'string'
+      default: 'tab'
+      enum: [
+          {value: 'tab', description: 'Opens results in a new tab'}
+          {value: 'rightPane', description: 'Opens results in a pane to the right'}
+          {value: 'downPane', description: 'Opens results in a pane below current'}
+      ]
     rdmCommand:
       type: 'string'
       default: ''
@@ -71,7 +75,11 @@ module.exports = AtomRtags =
         for uri, v of res.res
           atom.workspace.open uri, {'initialLine': v[0], 'initialColumn':v[1]}
       options = {searchAllPanes: true}
-      options.split = 'right' if atom.config.get('atom-rtags.openFindReferencesResultsInRightPane')
+      switch atom.config.get('atom-rtags.openResultsWindowLocation')
+          when 'tab' then null
+          when 'rightPane' then options.split = 'right'
+          when 'downPane' then options.split = 'down'
+          else null
       @referencesModel.setModel res
       atom.workspace.open AtomRtagsReferencesView.URI, options
     catch err
