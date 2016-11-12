@@ -73,6 +73,10 @@ module.exports =
     return [fn, row-1, col-1]
 
   find_references_at_point: (fn, loc) ->
+    out = rc_exec ['--current-file='+fn, '-r', fn_loc(fn, loc), '-K']
+    format_references(out)
+
+  find_all_references_at_point: (fn, loc) ->
     out = rc_exec ['--current-file='+fn, '-r', fn_loc(fn, loc), '-e', '-K']
     format_references(out)
 

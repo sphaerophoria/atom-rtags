@@ -44,6 +44,7 @@ module.exports = AtomRtags =
     # Register commands
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_symbol_at_point': => @find_symbol_at_point()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_references_at_point': => @find_references_at_point()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_all_references_at_point': => @find_all_references_at_point()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_virtuals_at_point': => @find_virtuals_at_point()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:location_stack_forward': => @location_stack_forward()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:location_stack_back': => @location_stack_back()
@@ -109,6 +110,17 @@ module.exports = AtomRtags =
       return if not matched_scope(active_editor)
       @location_stack_push()
       res = rtags.find_references_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
+      @display_results_in_references(res)
+    catch err
+      atom.notifications.addError err
+
+  find_all_references_at_point: ->
+    try
+      active_editor = atom.workspace.getActiveTextEditor()
+      return if not active_editor
+      return if not matched_scope(active_editor)
+      @location_stack_push()
+      res = rtags.find_all_references_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
       @display_results_in_references(res)
     catch err
       atom.notifications.addError err

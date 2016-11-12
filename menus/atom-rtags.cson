@@ -17,6 +17,10 @@
           'command': 'atom-rtags:find_references_at_point'
         },
         {
+          'label': 'Find all references at point (including declarations)'
+          'command': 'atom-rtags:find_all_references_at_point'
+        },
+        {
           'label': 'Find Virtuals at point'
           'command': 'atom-rtags:find_virtuals_at_point'
 
