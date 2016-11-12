@@ -73,12 +73,17 @@ module.exports = AtomRtags =
         current_linter_messages[file.$.name] = []
         for error in file.error
           if error.$.severity != "skipped" and error.$.severity != "none"
+            start_point = [error.$.line - 1, error.$.column - 1]
+            end_point = [error.$.line - 1]
+            if error.$.length
+              end_point.push error.$.column - 1 + error.$.length - 1
+
             current_linter_messages[file.$.name].push {
               type: error.$.severity,
               text: error.$.message,
               filePath: file.$.name,
               severity: error.$.severity,
-              range: [[ error.$.line - 1, error.$.column - 1], [error.$.line - 1, error.$.column - 1]]
+              range: [start_point , end_point]
             }
 
       for k,v of current_linter_messages
