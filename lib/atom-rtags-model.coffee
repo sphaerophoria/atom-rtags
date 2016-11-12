@@ -37,11 +37,11 @@ class AtomRtagsReferencesModel
     @emitter.emit 'did-clear-search-state', true
     for filePath, v of res
       matches = []
-      for [r, c, lineText] in v
+      for [r, c, lineText, parent_details] in v
         lineTextOffset = -1
         matchText = lineText.substring c+1, c+symbolLength+1
         range = [[r,c], [r,c+symbolLength]]
-        matches.push {lineText, lineTextOffset, matchText, range}
+        matches.push {lineText, lineTextOffset, matchText, range, parent_details}
       result = Result.create({matches})
       @paths.push filePath
       @results[filePath] = result

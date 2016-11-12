@@ -115,6 +115,7 @@ module.exports = AtomRtags =
       return if not matched_scope(active_editor)
       @location_stack_push()
       res = rtags.find_references_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
+      @referencesModel.setModel res
       @display_results_in_references(res)
     catch err
       atom.notifications.addError err
@@ -126,6 +127,7 @@ module.exports = AtomRtags =
       return if not matched_scope(active_editor)
       @location_stack_push()
       res = rtags.find_all_references_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
+      @referencesModel.setModel res
       @display_results_in_references(res)
     catch err
       atom.notifications.addError err
@@ -137,6 +139,7 @@ module.exports = AtomRtags =
       return if not matched_scope(active_editor)
       @location_stack_push()
       res = rtags.find_virtuals_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
+      @referencesModel.setModel res
       @display_results_in_references(res)
     catch err
       atom.notifications.addError err
@@ -174,5 +177,4 @@ module.exports = AtomRtags =
         when 'rightPane' then options.split = 'right'
         when 'downPane' then options.split = 'down'
         else null
-    @referencesModel.setModel res
     atom.workspace.open AtomRtagsReferencesView.URI, options

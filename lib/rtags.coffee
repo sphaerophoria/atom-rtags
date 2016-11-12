@@ -56,11 +56,22 @@ format_references = (out) ->
   for line in out.split "\n"
     [fn, row, col, strline...] = line.split ":"
     strline = strline.join ':'
+    [strline, parent_fn_sig, parent_fn_loc] = strline.split "\tfunction: "
+    parent_details = null
+    if parent_fn_loc
+      [parent_fn_file, parent_fn_line, parent_fn_col] = parent_fn_loc.split ":"
+      parent_fn_loc = [parent_fn_line - 1, parent_fn_col - 1]
+      parent_details = {
+        signature:  parent_fn_sig
+        filename: parent_fn_file
+        location: parent_fn_loc
+      }
+
     if fn and row and col
       if not res[fn]?
         res[fn] = []
         pathCount++
-      res[fn].push [row-1, col-1, strline]
+      res[fn].push [row-1, col-1, strline, parent_details]
       matchCount++
   {
     res, pathCount, matchCount, symbolName:info,
@@ -75,7 +86,7 @@ module.exports =
     return [fn, row-1, col-1]
 
   find_references_at_point: (fn, loc) ->
-    out = rc_exec ['--current-file='+fn, '-r', fn_loc(fn, loc), '-K']
+    out = rc_exec ['--current-file='+fn, '-r', fn_loc(fn, loc), '-K', '--containing-function-location', '--containing-function']
     format_references(out)
 
   find_all_references_at_point: (fn, loc) ->
