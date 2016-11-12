@@ -27,6 +27,8 @@ rc_exec =  (opt, retry=true) ->
         throw 'Rtags rdm server is not running.'
     if out.includes('Not indexed')
       throw 'This file is not indexed in Rtags.'
+    if err.stdout.length == 0 and err.stderr.length == 0
+      throw 'No results'
     if err.status == 1
       throw 'Undefined error while executing rc command\n\n'+ cmd + '\n\nOutput: ' + out
   return out.toString()
