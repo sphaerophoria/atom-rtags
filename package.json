@@ -25,4 +25,12 @@
         "1.0.0": "consumeLinter"
       }
     }
-}}
+  },
+  "providedServices": {
+    "autocomplete.provider": {
+      "versions": {
+        "2.0.0": "provide"
+      }
+    }
+  }
+}

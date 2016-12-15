@@ -97,6 +97,17 @@ module.exports = AtomRtags =
 
     @diagnostics = rtags.rc_diagnostics_start(update_linter)
 
+  provide: ->
+    selector: '.source.cpp, .source.c, source.cc'
+    includionPriority: 1
+    excludeLowerPriority: true
+    suggestionPriority: 2
+
+    getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix, activatedManually}) ->
+      new Promise (resolve) ->
+        out = rtags.rc_get_completions editor.getPath(), editor.getCursorBufferPosition(), editor.getText(), prefix
+        resolve(out)
+
   find_symbol_at_point: ->
     try
       active_editor = atom.workspace.getActiveTextEditor()

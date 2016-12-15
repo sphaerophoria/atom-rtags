@@ -11,12 +11,15 @@ rdm_start = () ->
     child_process.exec rdm_cmd, (err, stdout, stderr) ->
       atom.notifications.addError "Rtags rdm server died", stdout, stderr
 
-rc_exec =  (opt, retry=true) ->
+rc_exec =  (opt, retry=true, input=null) ->
   rc_cmd = atom.config.get 'atom-rtags.rcCommand'
   cmd = rc_cmd + ' --no-color ' + opt.join(' ')
   #console.log 'exec ' + cmd
   try
-    out = child_process.execSync cmd
+    if input == null
+      out = child_process.execSync cmd
+    else
+      out = child_process.execSync cmd, {"input": input}
   catch err
     out = err.output.toString()
     if out.includes('Can\'t seem to connect to server')
@@ -99,6 +102,17 @@ module.exports =
 
   rc_diagnostics_start: (callback) ->
     rc_diagnostics_start(callback)
+
+  rc_get_completions: (fn, loc, current_content, prefix) ->
+    out = rc_exec ['--current-file='+fn, '-b', '--unsaved-file='+fn+':'+current_content.length, '--code-complete-at', fn_loc(fn, loc), '--synchronous-completions', '--code-complete-prefix='+prefix], true, current_content
+    # TODO: Parse in form completion signiture(...) annotation parent
+    ret = []
+    for line in out.split "\n"
+      segments = line.split " "
+      if segments[0] != ""
+        continue
+      ret.push({ "text": segments[1]})
+    ret
 
   get_symbol_info: (fn, loc) ->
     out = rc_exec ['-r', fn_loc(fn, loc)]
