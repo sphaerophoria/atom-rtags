@@ -59,11 +59,12 @@ module.exports = AtomRtags =
     @location = null
     @diagnostics.kill()
 
+  # Toplevel function for linting. Provides a callback for every time rtags diagnostics outputs data
+  # On new data we update the linter with our newly received results.
   consumeLinter: (indieRegistry) ->
     mylinter = indieRegistry.register {name: "Rtags Linter"}
     @subscriptions.add(mylinter)
 
-    log = console.log.bind(console)
     current_linter_messages=@current_linter_messages
     update_linter = (data) ->
       # Parse data into linter strings
@@ -88,22 +89,25 @@ module.exports = AtomRtags =
 
       for k,v of current_linter_messages
         for error in v
-          log(error)
           res.push error
 
-      console.log(current_linter_messages)
-      console.log(res)
       mylinter.setMessages(res)
 
     @diagnostics = rtags.rc_diagnostics_start(update_linter)
 
+  # This is our autocompletion function.
   provide: ->
-    selector: '.source.cpp, .source.c, source.cc'
+    # Use for the following types
+    selector: '.source.cpp, .source.c, .source.cc, .source.h, .source.hpp'
+    # Put at the top of the list
     includionPriority: 1
+    # Scrap all those other suggestions, ours are great
     excludeLowerPriority: true
     suggestionPriority: 2
 
+    # On input autocompletion calls this function
     getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix, activatedManually}) ->
+      # Asynchronously get results in a promise
       new Promise (resolve) ->
         out = rtags.rc_get_completions editor.getPath(), editor.getCursorBufferPosition(), editor.getText(), prefix
         resolve(out)

@@ -1,3 +1,6 @@
+###
+Helper class for showing references
+###
 _ = require 'underscore-plus'
 {Emitter} = require 'atom'
 #escapeHelper = require '../escape-helper'
