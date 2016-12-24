@@ -1,0 +1,8 @@
+[] Cleanup references view
+  [] handle not indexed case
+  [] properly handle no references found case in tree view
+  [] add ability to toggle pannel
+  [] Allow for multiple references views (tabs?)
+[] Code completion (fix prefixes)
+[] Find symbol (by string)
+[] Find references to symbol (by string)

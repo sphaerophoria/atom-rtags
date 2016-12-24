@@ -1,11 +1,10 @@
 {CompositeDisposable, Notifictaion} = require 'atom'
 # {AtomRtagsReferencesModel, AtomRtagsReferencesView} = require './atom-rtags-references-view'
-AtomRtagsReferencesModel = require './atom-rtags-model'
-AtomRtagsReferencesView = require './view/results-pane'
+RtagsReferencesTreePaneView = require './view/references-tree-view'
 rtags = require './rtags'
 
 matched_scope = (editor) ->
-  for s in ['source.cpp', 'source.c']
+  for s in ['source.cpp', 'source.c', 'source.h', 'source.hpp']
     return true if s in editor.getRootScopeDescriptor().scopes
   return false
 
@@ -32,11 +31,8 @@ module.exports = AtomRtags =
   activate: (state) ->
     apd = require "atom-package-deps"
     apd.install('atom-rtags')
-    atom.workspace.addOpener (filePath) ->
-      new AtomRtagsReferencesView() if filePath is AtomRtagsReferencesView.URI
 
-    @referencesModel = new AtomRtagsReferencesModel
-    AtomRtagsReferencesView.model = @referencesModel
+    @referencesView = new RtagsReferencesTreePaneView
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -52,8 +48,6 @@ module.exports = AtomRtags =
     @current_linter_messages = {}
 
   deactivate: ->
-    AtomRtagsReferencesView.model = null
-    @referencesModel = null
     @subscriptions?.dispose()
     @subscriptions = null
     @location = null
@@ -130,7 +124,6 @@ module.exports = AtomRtags =
       return if not matched_scope(active_editor)
       @location_stack_push()
       res = rtags.find_references_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
-      @referencesModel.setModel res
       @display_results_in_references(res)
     catch err
       atom.notifications.addError err
@@ -142,7 +135,6 @@ module.exports = AtomRtags =
       return if not matched_scope(active_editor)
       @location_stack_push()
       res = rtags.find_all_references_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
-      @referencesModel.setModel res
       @display_results_in_references(res)
     catch err
       atom.notifications.addError err
@@ -154,7 +146,6 @@ module.exports = AtomRtags =
       return if not matched_scope(active_editor)
       @location_stack_push()
       res = rtags.find_virtuals_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
-      @referencesModel.setModel res
       @display_results_in_references(res)
     catch err
       atom.notifications.addError err
@@ -186,10 +177,5 @@ module.exports = AtomRtags =
     if res.matchCount == 1
       for uri, v of res.res
         atom.workspace.open uri, {'initialLine': v[0], 'initialColumn':v[1]}
-    options = {searchAllPanes: true}
-    switch atom.config.get('atom-rtags.openResultsWindowLocation')
-        when 'tab' then null
-        when 'rightPane' then options.split = 'right'
-        when 'downPane' then options.split = 'down'
-        else null
-    atom.workspace.open AtomRtagsReferencesView.URI, options
+    atom.workspace.addBottomPanel({item: @referencesView.getElement()})
+    @referencesView.setReferences(res)

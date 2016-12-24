@@ -75,7 +75,7 @@ format_references = (out) ->
     parent_details = null
     if parent_fn_loc
       [parent_fn_file, parent_fn_line, parent_fn_col] = parent_fn_loc.split ":"
-      parent_fn_loc = [parent_fn_line - 1, parent_fn_col - 1]
+      parent_fn_loc = { row: parent_fn_line - 1, column: parent_fn_col - 1}
       parent_details = {
         signature:  parent_fn_sig
         filename: parent_fn_file
