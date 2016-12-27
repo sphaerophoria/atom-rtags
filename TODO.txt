@@ -4,5 +4,8 @@
   [] add ability to toggle pannel
   [] Allow for multiple references views (tabs?)
 [] Code completion (fix prefixes)
+  [] fix prefixes
+  [] don't pipe in entire file every time someone types a character. Maybe only fetch completions at the start
 [] Find symbol (by string)
 [] Find references to symbol (by string)
+[] Handle situation where rdm isn't started for code linting (maybe we should check every time we open a file...)

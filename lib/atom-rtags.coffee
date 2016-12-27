@@ -13,18 +13,18 @@ module.exports = AtomRtags =
     rcCommand:
       type: 'string'
       default: 'rc'
-    openResultsWindowLocation:
-      type: 'string'
-      default: 'tab'
-      enum: [
-          {value: 'tab', description: 'Opens results in a new tab'}
-          {value: 'rightPane', description: 'Opens results in a pane to the right'}
-          {value: 'downPane', description: 'Opens results in a pane below current'}
-      ]
     rdmCommand:
       type: 'string'
       default: ''
       description: 'Command to run to start the rdm server. If empty rdm server will not be autospawned, and should be started manually.'
+    codeCompletion:
+      type: 'boolean'
+      default: 'true'
+      description: 'Whether or not to suggest code completions (restart atom to apply)'
+    codeLinting:
+      type: 'boolean'
+      default: 'true'
+      description: 'Enable to show compile errors (restart atom to apply)'
 
   subscriptions: null
 
@@ -56,6 +56,11 @@ module.exports = AtomRtags =
   # Toplevel function for linting. Provides a callback for every time rtags diagnostics outputs data
   # On new data we update the linter with our newly received results.
   consumeLinter: (indieRegistry) ->
+    enableCodeLinting = atom.config.get('atom-rtags.codeLinting')
+
+    if !enableCodeLinting
+      return
+
     mylinter = indieRegistry.register {name: "Rtags Linter"}
     @subscriptions.add(mylinter)
 
@@ -91,6 +96,11 @@ module.exports = AtomRtags =
 
   # This is our autocompletion function.
   provide: ->
+    enableCodeCompletion = atom.config.get('atom-rtags.codeCompletion')
+
+    if !enableCodeCompletion
+      return
+
     # Use for the following types
     selector: '.source.cpp, .source.c, .source.cc, .source.h, .source.hpp'
     # Put at the top of the list
