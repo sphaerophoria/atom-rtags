@@ -23,8 +23,11 @@
         {
           'label': 'Find Virtuals at point'
           'command': 'atom-rtags:find_virtuals_at_point'
-
-        }
+        },
+        {
+          'label': 'Find symbols by keyword'
+          'command': 'atom-rtags:find_symbols_by_keyword'
+        },
       ]
     ]
   }

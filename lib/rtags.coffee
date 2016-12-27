@@ -133,3 +133,7 @@ module.exports =
         continue
       ret.push({ "text": segments[1]})
     ret
+
+  find_symbols_by_keyword: (keyword) ->
+    out = rc_exec ['-z', '-K', '-F', keyword, '--wildcard-symbol-names']
+    format_references(out)

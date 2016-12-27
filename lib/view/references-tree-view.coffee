@@ -1,4 +1,3 @@
-referencesClassName = 'rtags-references'
 rtags = require '../rtags'
 
 class RtagsReference

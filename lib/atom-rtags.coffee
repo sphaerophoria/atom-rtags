@@ -1,6 +1,7 @@
 {CompositeDisposable, Notifictaion} = require 'atom'
 # {AtomRtagsReferencesModel, AtomRtagsReferencesView} = require './atom-rtags-references-view'
 RtagsReferencesTreePaneView = require './view/references-tree-view'
+RtagsSearchView = require './view/rtags-search-view'
 rtags = require './rtags'
 
 matched_scope = (editor) ->
@@ -33,6 +34,7 @@ module.exports = AtomRtags =
     apd.install('atom-rtags')
 
     @referencesView = new RtagsReferencesTreePaneView
+    @searchViewPanel = null
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -44,6 +46,7 @@ module.exports = AtomRtags =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_virtuals_at_point': => @find_virtuals_at_point()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:location_stack_forward': => @location_stack_forward()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:location_stack_back': => @location_stack_back()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_symbols_by_keyword': => @find_symbols_by_keyword()
     @location = {index:0, stack:[]}
     @current_linter_messages = {}
 
@@ -159,6 +162,21 @@ module.exports = AtomRtags =
       @display_results_in_references(res)
     catch err
       atom.notifications.addError err
+
+  find_symbols_by_keyword: ->
+    destroyCallback = () =>
+      @searchViewPanel?.destroy()
+
+    findSymbolCallback = (query) =>
+      try
+        @searchViewPanel?.destroy()
+        out = rtags.find_symbols_by_keyword(query)
+        @display_results_in_references(out)
+      catch err
+        atom.notifications.addError(err)
+
+    searchView = new RtagsSearchView(findSymbolCallback, destroyCallback)
+    @searchViewPanel = atom.workspace.addModalPanel({item: searchView.getElement()})
 
   location_stack_jump: (howmuch) ->
     loc =  @location.stack[@location.index+howmuch]
