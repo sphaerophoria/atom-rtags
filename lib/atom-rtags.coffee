@@ -31,7 +31,7 @@ module.exports = AtomRtags =
 
   activate: (state) ->
     apd = require "atom-package-deps"
-    apd.install('atom-rtags')
+    apd.install('atom-rtags-plus')
 
     @referencesView = new RtagsReferencesTreePane
     @searchView = new RtagsSearchView
@@ -40,14 +40,14 @@ module.exports = AtomRtags =
     @subscriptions = new CompositeDisposable
 
     # Register commands
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_symbol_at_point': => @find_symbol_at_point()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_references_at_point': => @find_references_at_point()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_all_references_at_point': => @find_all_references_at_point()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_virtuals_at_point': => @find_virtuals_at_point()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:location_stack_forward': => @location_stack_forward()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:location_stack_back': => @location_stack_back()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_symbols_by_keyword': => @find_symbols_by_keyword()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_references_by_keyword': => @find_references_by_keyword()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find_symbol_at_point': => @find_symbol_at_point()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find_references_at_point': => @find_references_at_point()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find_all_references_at_point': => @find_all_references_at_point()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find_virtuals_at_point': => @find_virtuals_at_point()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:location_stack_forward': => @location_stack_forward()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:location_stack_back': => @location_stack_back()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find_symbols_by_keyword': => @find_symbols_by_keyword()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find_references_by_keyword': => @find_references_by_keyword()
     @location = {index:0, stack:[]}
     @current_linter_messages = {}
 
@@ -60,7 +60,7 @@ module.exports = AtomRtags =
   # Toplevel function for linting. Provides a callback for every time rtags diagnostics outputs data
   # On new data we update the linter with our newly received results.
   consumeLinter: (indieRegistry) ->
-    enableCodeLinting = atom.config.get('atom-rtags.codeLinting')
+    enableCodeLinting = atom.config.get('atom-rtags-plus.codeLinting')
 
     if !enableCodeLinting
       return
@@ -100,7 +100,7 @@ module.exports = AtomRtags =
 
   # This is our autocompletion function.
   provide: ->
-    enableCodeCompletion = atom.config.get('atom-rtags.codeCompletion')
+    enableCodeCompletion = atom.config.get('atom-rtags-plus.codeCompletion')
 
     if !enableCodeCompletion
       return

@@ -8,7 +8,7 @@
 # For more detailed documentation see
 # https://atom.io/docs/latest/behind-atom-keymaps-in-depth
 'atom-workspace':
-  'ctrl-\'': 'atom-rtags:find_symbol_at_point'
-  'ctrl-"': 'atom-rtags:find_references_at_point'
-  'ctrl-{': 'atom-rtags:location_stack_back'
-  'ctrl-}': 'atom-rtags:location_stack_forward'
+  'ctrl-\'': 'atom-rtags-plus:find_symbol_at_point'
+  'ctrl-"': 'atom-rtags-plus:find_references_at_point'
+  'ctrl-{': 'atom-rtags-plus:location_stack_back'
+  'ctrl-}': 'atom-rtags-plus:location_stack_forward'

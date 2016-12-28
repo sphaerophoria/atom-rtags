@@ -8,7 +8,7 @@ fn_loc = (fn, loc) ->
   fn + ':' + (loc.row+1) + ':' + (loc.column+1)
 
 rdm_start = () ->
-  rdm_cmd = atom.config.get 'atom-rtags.rdmCommand'
+  rdm_cmd = atom.config.get 'atom-rtags-plus.rdmCommand'
   if rdm_cmd
     child_process.exec rdm_cmd, (err, stdout, stderr) ->
       atom.notifications.addError "Rtags rdm server died", stdout, stderr
@@ -18,7 +18,7 @@ rdm_start = () ->
 #  retry: whether or not to retry
 #  input: What to pipe to stdin. null if nothing
 rc_exec =  (opt, retry=true, input=null) ->
-  rc_cmd = atom.config.get 'atom-rtags.rcCommand'
+  rc_cmd = atom.config.get 'atom-rtags-plus.rcCommand'
   cmd = rc_cmd + ' --no-color ' + opt.join(' ')
   #console.log 'exec ' + cmd
   try
@@ -45,7 +45,7 @@ rc_exec =  (opt, retry=true, input=null) ->
 # Start rc diagnostics. Called on startup used for linter
 # TODO: handle clase where rdm isn't up yet
 rc_diagnostics_start = (callback) ->
-  rc_cmd = atom.config.get 'atom-rtags.rcCommand'
+  rc_cmd = atom.config.get 'atom-rtags-plus.rcCommand'
   child = child_process.spawn(rc_cmd, ['--diagnostics'])
   child.stdout.on('data', (data) ->
     xml2js.parseString(data.toString(), (err, result) ->
