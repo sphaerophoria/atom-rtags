@@ -135,5 +135,13 @@ module.exports =
     ret
 
   find_symbols_by_keyword: (keyword) ->
+    if !keyword
+      throw 'No query'
     out = rc_exec ['-z', '-K', '-F', keyword, '--wildcard-symbol-names']
+    format_references(out)
+
+  find_references_by_keyword: (keyword) ->
+    if !keyword
+      throw 'No query'
+    out = rc_exec ['-z', '-K', '-R', keyword, '--wildcard-symbol-names']
     format_references(out)

@@ -47,6 +47,7 @@ module.exports = AtomRtags =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:location_stack_forward': => @location_stack_forward()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:location_stack_back': => @location_stack_back()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_symbols_by_keyword': => @find_symbols_by_keyword()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:find_references_by_keyword': => @find_references_by_keyword()
     @location = {index:0, stack:[]}
     @current_linter_messages = {}
 
@@ -166,13 +167,23 @@ module.exports = AtomRtags =
   find_symbols_by_keyword: ->
     findSymbolCallback = (query) =>
       try
-        @searchViewPanel?.destroy()
         out = rtags.find_symbols_by_keyword(query)
         @display_results_in_references(out)
       catch err
         atom.notifications.addError(err)
 
     @searchView.setSearchCallback(findSymbolCallback)
+    @searchView.show()
+
+  find_references_by_keyword: ->
+    findReferencesCallback = (query) =>
+      try
+        out = rtags.find_references_by_keyword(query)
+        @display_results_in_references(out)
+      catch err
+        atom.notifications.addError(err)
+
+    @searchView.setSearchCallback(findReferencesCallback)
     @searchView.show()
 
   location_stack_jump: (howmuch) ->
