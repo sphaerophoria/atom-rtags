@@ -1,4 +1,5 @@
 {CompositeDisposable, Notifictaion} = require 'atom'
+
 # {AtomRtagsReferencesModel, AtomRtagsReferencesView} = require './atom-rtags-references-view'
 RtagsReferencesTreePane = require './view/references-tree-view'
 RtagsSearchView = require './view/rtags-search-view'
@@ -48,6 +49,7 @@ module.exports = AtomRtags =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:location_stack_back': => @location_stack_back()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find_symbols_by_keyword': => @find_symbols_by_keyword()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find_references_by_keyword': => @find_references_by_keyword()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:reindex_current_file': => @reindex_current_file()
     @location = {index:0, stack:[]}
     @current_linter_messages = {}
 
@@ -185,6 +187,15 @@ module.exports = AtomRtags =
 
     @searchView.setSearchCallback(findReferencesCallback)
     @searchView.show()
+
+  reindex_current_file: ->
+    try
+      active_editor = atom.workspace.getActiveTextEditor()
+      return if not active_editor
+      return if not matched_scope(active_editor)
+      rtags.reindex_current_file active_editor.getPath()
+    catch err
+      atom.notifications.addError err
 
   location_stack_jump: (howmuch) ->
     loc =  @location.stack[@location.index+howmuch]

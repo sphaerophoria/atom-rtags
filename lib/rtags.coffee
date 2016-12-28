@@ -145,3 +145,6 @@ module.exports =
       throw 'No query'
     out = rc_exec ['-z', '-K', '-R', keyword, '--wildcard-symbol-names']
     format_references(out)
+
+  reindex_current_file: (fn) ->
+    rc_exec ['-V', fn]
