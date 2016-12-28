@@ -1,6 +1,6 @@
 {CompositeDisposable, Notifictaion} = require 'atom'
 # {AtomRtagsReferencesModel, AtomRtagsReferencesView} = require './atom-rtags-references-view'
-RtagsReferencesTreePaneView = require './view/references-tree-view'
+RtagsReferencesTreePane = require './view/references-tree-view'
 RtagsSearchView = require './view/rtags-search-view'
 rtags = require './rtags'
 
@@ -33,7 +33,7 @@ module.exports = AtomRtags =
     apd = require "atom-package-deps"
     apd.install('atom-rtags')
 
-    @referencesView = new RtagsReferencesTreePaneView
+    @referencesView = new RtagsReferencesTreePane
     @searchViewPanel = null
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
@@ -205,5 +205,6 @@ module.exports = AtomRtags =
     if res.matchCount == 1
       for uri, v of res.res
         atom.workspace.open uri, {'initialLine': v[0], 'initialColumn':v[1]}
-    atom.workspace.addBottomPanel({item: @referencesView.getElement()})
+    #atom.workspace.addBottomPanel({item: @referencesView})
+    @referencesView.show()
     @referencesView.setReferences(res)

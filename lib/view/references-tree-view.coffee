@@ -1,203 +1,137 @@
+{View} = require 'space-pen'
 rtags = require '../rtags'
 
-class RtagsReference
-  constructor: (ref, path, indentLevel, redrawCallback)->
-    @currentlyOpen = false
-    @element = document.createElement('tr')
-    @callerReferences = null
+class RtagsReference extends View
+  @content: ->
+    @tr =>
+      @td style: 'white-space: nowrap;', =>
+        @span outlet: 'indents', style: 'white-space: pre'
+        @span outlet: 'expander', class: 'icon icon-chevron-right'
+        @span outlet: "pathText", click: 'openPath', style: 'width: 100%'
+      @td outlet: 'referenceText', class: 'text-highlight', click: 'openPath', style: 'white-space: nowrap;'
+      @td outlet: "callerText", click: 'openPath', style: 'width: 100%;'
+
+  initialize: (ref, path, indentLevel, redrawCallback) ->
     @caller = null
     @redrawCallback = redrawCallback
     @indentLevel = indentLevel
     @path = path
+    @children = []
 
     [@line, @column, content, @caller] = ref
     # Looks like atom lines and columns are 0 indexed, but all display is 1 indexed
     displayLine = @line + 1;
     displayColumn = @column + 1;
-
     hasCaller = (@caller != null)
 
-    pathCol = document.createElement('td')
-    pathCol.style.whiteSpace = 'no-wrap'
-    pathColLine = document.createElement('nobr')
+    @expander.click(@expand)
 
-    # Expander has to be part of path column to ensure that indentation doesn't look wrong
-    for i in [1..@indentLevel] by 1
-      indentSpan = document.createElement('span')
-      indentSpan.classList.add('rtags-indent-span')
-      indentSpan.textContent = '    '
-      pathColLine.appendChild(indentSpan)
+    for i in [0..@indentLevel][1..]
+      @indents.append('    ')
+
     if hasCaller
-      @currentRefDisclosureArrow = document.createElement('span')
-      @currentRefDisclosureArrow.classList.add('icon', 'icon-chevron-right')
-      @currentRefDisclosureArrow.onclick = @toggle
-      pathColLine.appendChild(@currentRefDisclosureArrow)
+      @expander.show()
+    else
+      @expander.hide()
 
-    pathSpan = document.createElement('span')
-    pathSpan.textContent = "#{path}:#{displayLine}:#{displayColumn}:"
-    pathSpan.onclick = @openPath
-    pathColLine.appendChild(pathSpan)
-    pathCol.appendChild(pathColLine)
-    @element.appendChild(pathCol)
-
-    lineCol = document.createElement('td')
-    lineCol.style.whiteSpace = 'nowrap'
-    lineCol.classList.add('text-highlight')
-    lineCol.onclick = @openPath
-    lineCol.textContent = "#{content}"
-    @element.appendChild(lineCol)
-
-    callerCol = document.createElement('td')
-    callerCol.style.width = '100%'
+    @pathText.text("#{path}:#{displayLine}:#{displayColumn}:")
+    @referenceText.text("#{content}")
     if hasCaller
-      callerCol.textContent = "#{@caller.signature}"
-      callerCol.onclick = @openPath
+      @callerText.text("#{@caller.signature}")
 
-    @element.appendChild(callerCol)
-
-  openPath: =>
-    options = {
-      initialLine: @line,
-      initialColumn: @column,
-    }
-    atom.workspace.open(@path, options)
+  getReferences: ->
+    ret = []
+    ret.push.apply(ret, @)
+    for child in @children
+      ret.push.apply(ret, child.getReferences())
+    ret
 
   expand: =>
-    @currentlyOpen = true
-    @currentRefDisclosureArrow.classList.remove('icon-chevron-right')
-    @currentRefDisclosureArrow.classList.add('icon-chevron-down')
-    @callerReferences = new RtagsReferencesList(@indentLevel + 1, @redrawCallback)
+    @expander.unbind('click', @expand)
+    @expander.click(@fold)
+    @expander.removeClass('icon-chevron-right')
+    @expander.addClass('icon-chevron-down')
     try
-      @callerReferences.setReferences(rtags.find_references_at_point(@caller.filename, @caller.location))
+      @addChildren(rtags.find_references_at_point(@caller.filename, @caller.location))
     catch err
       console.log(err)
 
     @redrawCallback()
 
   fold: =>
-    @currentlyOpen = false
-    @currentRefDisclosureArrow.classList.remove('icon-chevron-down')
-    @currentRefDisclosureArrow.classList.add('icon-chevron-right')
-    @callerReferences.destroy()
-    @callerReferences = null
+    @expander.unbind('click', @fold)
+    @expander.click(@expand)
+    @expander.removeClass('icon-chevron-down')
+    @expander.addClass('icon-chevron-right')
+    @children = []
     @redrawCallback()
 
-  getReferences: =>
-    ret = [@element]
-    if @callerReferences != null
-      ret.push.apply(ret, @callerReferences.getReferences())
-    ret
+  openPath: ->
+    options = {
+      initialLine: @line,
+      initialColumn: @column,
+    }
+    atom.workspace.open(@path, options)
 
-  toggle: =>
-    if @currentlyOpen == true
-      @fold()
-    else
-      @expand()
-
-class RtagsReferencesList
-  constructor: (indentLevel, redrawCallback)->
-    @references = []
-    @redrawCallback = redrawCallback
-    @indentLevel = indentLevel
-
-  getReferences: =>
-    ret = []
-    for reference in @references
-      ret.push.apply(ret, reference.getReferences())
-    ret
-
-  destroy: =>
-    @references = []
-
-  setReferences: (res) =>
-    @references = []
+  addChildren: (res)->
     for path, refArray of res.res
       for ref in refArray
-        ref = new RtagsReference(ref, path, @indentLevel, @redrawCallback)
-        @references.push(ref)
+        ref = new RtagsReference(ref, path, @indentLevel + 1, @redrawCallback)
+        @children.push(ref)
 
 module.exports =
-class RtagsReferencesTreePaneView
-  constructor: ->
-    @element = document.createElement('div')
-    @element.style.height = "200px"
+class RtagsReferencesTreePane extends View
+  @content: ->
+    @div =>
+      @div outlet: 'resizeHandle', style: 'height: 8px; cursor: row-resize', mouseDown: 'resizeStarted', mouseUp: 'resizeStopped'
+      @tag 'header', outlet: 'header', =>
+        @h2 'Rtags References', style: 'display: inline-block;'
+        @span class: 'icon icon-x pull-right', click: 'destroy'
+      @div style: 'overflow: auto;', outlet: 'referencesTableDiv', =>
+        @table class: 'rtags-references-table', outlet: 'referencesTable'
 
-    @resizeHandle = document.createElement('div')
-    @resizeHandle.style.height = '8px'
-    @resizeHandle.style.cursor = 'row-resize'
-    @resizeHandle.onmousedown =  @resizeStarted
-    @resizeHandle.onmouseup =  @resizeStopped
-    @element.appendChild(@resizeHandle)
+  initialize: ->
+    @panel = null
+    @children = []
+    @height(200)
 
-    @header = document.createElement('header')
-    title = document.createElement('h2')
-    title.textContent = "Rtags References"
-    # Ensure the next element (the close button) is on the same line
-    title.style.display += 'inline-block'
-    @header.appendChild(title)
-
-    # TODO: Align it vertically
-    closeButton = document.createElement ('span')
-    closeButton.classList.add('icon', 'icon-x', 'pull-right')
-    closeButton.onclick = @destroy
-
-    @header.appendChild(closeButton)
-
-    @element.appendChild(@header)
-
-    # Put table in a div to allow for scrolling
-    @referencesTableDiv = document.createElement('div')
-    @referencesTableDiv.style.overflow = 'auto'
-    @referencesTable = @generateReferencesTable()
-    @referencesTableDiv.appendChild(@referencesTable)
-    @element.appendChild(@referencesTableDiv)
-
-    @child = new RtagsReferencesList(0, @redraw)
-
-  generateReferencesTable: ->
-    referencesTable = document.createElement('table')
-    referencesTable.classList.add('rtags-references-table')
-    #referencesTable.style.width = '100%'
-    referencesTable
-
-  setReferences: (res) =>
-    @child.setReferences(res)
+  setReferences: (res) ->
+    @children = []
+    for path, refArray of res.res
+      for ref in refArray
+        ref = new RtagsReference(ref, path, 0, @redraw)
+        @children.push(ref)
     @redraw()
-    @rerender()
+    @resizeChild()
 
-  destroy: =>
-    @element.remove()
-
-  getElement: =>
-    @element
-
-  resizeStarted: =>
+  resizeStarted: ->
     document.addEventListener('mousemove', @resize)
     document.addEventListener('mouseup', @resizeStopped)
 
-  resizeStopped: =>
+  resizeStopped: ->
     document.removeEventListener('mousemove', @resize)
     document.removeEventListener('mouseup', @resizeStopped)
 
   resize: (event) =>
     boundingBox = @element.getBoundingClientRect()
-    @element.style.height = "" + (boundingBox.bottom - event.pageY) + "px"
-    @rerender()
+    @height(boundingBox.bottom - event.pageY)
+    @resizeChild()
+
+  resizeChild: ->
+    headerHeight = @header.height()
+    elementHeight = @height()
+    # TODO: fix hardcoded 20
+    @referencesTableDiv.height(elementHeight - headerHeight - 20)
 
   redraw: =>
-    # Logic here is
-    # * Delete all table elements
-    # * Repopulate table with new elements
-    referencesTable = @generateReferencesTable()
-    for element in @child.getReferences()
-      referencesTable.appendChild(element)
-    @referencesTable.parentNode.replaceChild(referencesTable, @referencesTable)
-    @referencesTable = referencesTable
+    @referencesTable.children().detach()
+    for rtagsReference in @children
+      for reference in rtagsReference.getReferences()
+        @referencesTable.append(reference)
 
-  rerender: =>
-    boundingBox = @element.getBoundingClientRect()
-    headerBoundingBox = @header.getBoundingClientRect()
-    headerHeight = headerBoundingBox.bottom - headerBoundingBox.top
-    elementHeight = boundingBox.bottom - boundingBox.top
-    # TODO: fix hardcoded 20
-    @referencesTableDiv.style.height = "" + elementHeight - headerHeight - 20 + "px"
+  destroy: ->
+    @panel?.destroy()
+
+  show: ->
+    @destroy()
+    @panel = atom.workspace.addBottomPanel({item: @})
