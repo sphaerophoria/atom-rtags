@@ -34,7 +34,7 @@ module.exports = AtomRtags =
     apd.install('atom-rtags')
 
     @referencesView = new RtagsReferencesTreePane
-    @searchViewPanel = null
+    @searchView = new RtagsSearchView
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -164,9 +164,6 @@ module.exports = AtomRtags =
       atom.notifications.addError err
 
   find_symbols_by_keyword: ->
-    destroyCallback = () =>
-      @searchViewPanel?.destroy()
-
     findSymbolCallback = (query) =>
       try
         @searchViewPanel?.destroy()
@@ -175,8 +172,8 @@ module.exports = AtomRtags =
       catch err
         atom.notifications.addError(err)
 
-    searchView = new RtagsSearchView(findSymbolCallback, destroyCallback)
-    @searchViewPanel = atom.workspace.addModalPanel({item: searchView.getElement()})
+    @searchView.setSearchCallback(findSymbolCallback)
+    @searchView.show()
 
   location_stack_jump: (howmuch) ->
     loc =  @location.stack[@location.index+howmuch]

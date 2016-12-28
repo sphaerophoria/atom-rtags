@@ -1,29 +1,31 @@
+{View} = require 'space-pen'
 rtags = require '../rtags'
 
 module.exports =
-  class RtagsSearchView
-    constructor: (searchCallback, destroyCallback) ->
-      @destroyCallback = destroyCallback
-      @searchCallback = searchCallback
+  class RtagsSearchView extends View
+    @content: ->
+      @form =>
+        @input class: 'input-text native-key-bindings', type: 'text', keyup: 'handleKeydown', outlet: 'textbox'
 
-      @element = document.createElement('form')
-      @textbox = document.createElement('input')
-      @textbox.classList.add('input-text', 'native-key-bindings')
-      @textbox.autofocus = true
-      @textbox.type = 'text'
-      @element.appendChild(@textbox)
-      @textbox.onkeyup = @handleKeydown
+    initialize: () ->
+      @panel = null
+      @searchCallback = null
 
-    getElement: =>
-      @element
+    setSearchCallback: (callback) ->
+      @searchCallback = callback
 
-    destroy: =>
-      @element.remove()
-      @destroyCallback()
+    show: ->
+      @textbox.val('')
+      @panel = atom.workspace.addModalPanel({item: @})
+      @textbox.focus()
+
+    hide: ->
+      @panel?.destroy()
 
     handleKeydown: (event) =>
       if event.keyCode == 13
-        @searchCallback(@textbox.value)
+        @searchCallback?(@textbox.val())
+        @hide()
       else if event.keyCode == 27
-        @destroy()
+        @hide()
       return
