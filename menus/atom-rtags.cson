@@ -10,23 +10,23 @@
       'submenu': [
         {
           'label': 'Find Symbol at point'
-          'command': 'atom-rtags-plus:find_symbol_at_point'
+          'command': 'atom-rtags-plus:find-symbol-at-point'
         },
         {
           'label': 'Find References at point'
-          'command': 'atom-rtags-plus:find_references_at_point'
+          'command': 'atom-rtags-plus:find-references-at-point'
         },
         {
           'label': 'Find all references at point (including declarations)'
-          'command': 'atom-rtags-plus:find_all_references_at_point'
+          'command': 'atom-rtags-plus:find-all-references-at-point'
         },
         {
           'label': 'Find Virtuals at point'
-          'command': 'atom-rtags-plus:find_virtuals_at_point'
+          'command': 'atom-rtags-plus:find-virtuals-at-point'
         },
         {
           'label': 'Find symbols by keyword'
-          'command': 'atom-rtags-plus:find_symbols_by_keyword'
+          'command': 'atom-rtags-plus:find-symbols-by-keyword'
         },
       ]
     ]

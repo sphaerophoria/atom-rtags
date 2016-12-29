@@ -41,15 +41,15 @@ module.exports = AtomRtags =
     @subscriptions = new CompositeDisposable
 
     # Register commands
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find_symbol_at_point': => @find_symbol_at_point()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find_references_at_point': => @find_references_at_point()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find_all_references_at_point': => @find_all_references_at_point()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find_virtuals_at_point': => @find_virtuals_at_point()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:location_stack_forward': => @location_stack_forward()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:location_stack_back': => @location_stack_back()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find_symbols_by_keyword': => @find_symbols_by_keyword()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find_references_by_keyword': => @find_references_by_keyword()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:reindex_current_file': => @reindex_current_file()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find-symbol-at-point': => @find_symbol_at_point()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find-references-at-point': => @find_references_at_point()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find-all-references-at-point': => @find_all_references_at_point()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find-virtuals-at-point': => @find_virtuals_at_point()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:location-stack-forward': => @location_stack_forward()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:location-stack-back': => @location_stack_back()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find-symbols-by-keyword': => @find_symbols_by_keyword()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find-references-by-keyword': => @find_references_by_keyword()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:reindex-current-file': => @reindex_current_file()
     @location = {index:0, stack:[]}
     @current_linter_messages = {}
 
