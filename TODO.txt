@@ -11,3 +11,5 @@
 [] Handle situation where rdm isn't started for code linting (maybe we should check every time we open a file...)
 [] Clean up underlining on linting
 [] Move reference to center of screen after jump
+[] Class hierarchy
+[] Mouse based navigation

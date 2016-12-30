@@ -75,7 +75,7 @@ module.exports = AtomRtags =
       # Parse data into linter strings
       # Linter only updates one file at a time... so every time we set messages we have to aggregate all our previous linted files
       res = []
-      for file in data.checkstyle.file
+      for file in data?.checkstyle?.file
         current_linter_messages[file.$.name] = []
         for error in file.error
           if error.$.severity != "skipped" and error.$.severity != "none"

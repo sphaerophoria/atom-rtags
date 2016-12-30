@@ -48,9 +48,12 @@ rc_diagnostics_start = (callback) ->
   rc_cmd = atom.config.get 'atom-rtags-plus.rcCommand'
   child = child_process.spawn(rc_cmd, ['--diagnostics'])
   child.stdout.on('data', (data) ->
-    xml2js.parseString(data.toString(), (err, result) ->
-      callback(result)
-    ))
+    try
+      xml2js.parseString(data.toString(), (err, result) ->
+        callback(result)
+      )
+    catch err
+      console.log(err))
   child
 
 # rc references outputs some information related to the function we searched for, extract this information
