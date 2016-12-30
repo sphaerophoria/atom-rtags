@@ -127,7 +127,10 @@ module.exports =
 
   # This is the calldown for autocompletion. Sticks our current buffer into stdin and then gets results out of rtags
   rc_get_completions: (fn, loc, current_content, prefix) ->
-    out = rc_exec ['--current-file='+fn, '-b', '--unsaved-file='+fn+':'+current_content.length, '--code-complete-at', fn_loc(fn, loc), '--synchronous-completions', '--code-complete-prefix='+prefix], true, current_content
+    if current_content
+      out = rc_exec ['--current-file='+fn, '-b', '--unsaved-file='+fn+':'+current_content.length, '--code-complete-at', fn_loc(fn, loc), '--synchronous-completions', '--code-complete-prefix='+prefix], true, current_content
+    else
+      out = rc_exec ['--current-file='+fn, '-b', '--code-complete-at', fn_loc(fn, loc), '--synchronous-completions', '--code-complete-prefix='+prefix]
     # TODO: Parse in form completion signiture(...) annotation parent
     ret = []
     for line in out.split "\n"

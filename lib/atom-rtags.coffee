@@ -3,6 +3,7 @@
 # {AtomRtagsReferencesModel, AtomRtagsReferencesView} = require './atom-rtags-references-view'
 RtagsReferencesTreePane = require './view/references-tree-view'
 RtagsSearchView = require './view/rtags-search-view'
+RtagsCodeCompleter = require './code-completer.coffee'
 rtags = require './rtags'
 
 matched_scope = (editor) ->
@@ -36,6 +37,7 @@ module.exports = AtomRtags =
 
     @referencesView = new RtagsReferencesTreePane
     @searchView = new RtagsSearchView
+    @codeCompletionProvider = new RtagsCodeCompleter
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -102,25 +104,8 @@ module.exports = AtomRtags =
 
   # This is our autocompletion function.
   provide: ->
-    enableCodeCompletion = atom.config.get('atom-rtags-plus.codeCompletion')
+    @codeCompletionProvider
 
-    if !enableCodeCompletion
-      return
-
-    # Use for the following types
-    selector: '.source.cpp, .source.c, .source.cc, .source.h, .source.hpp'
-    # Put at the top of the list
-    includionPriority: 1
-    # Scrap all those other suggestions, ours are great
-    excludeLowerPriority: true
-    suggestionPriority: 2
-
-    # On input autocompletion calls this function
-    getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix, activatedManually}) ->
-      # Asynchronously get results in a promise
-      new Promise (resolve) ->
-        out = rtags.rc_get_completions editor.getPath(), editor.getCursorBufferPosition(), editor.getText(), prefix
-        resolve(out)
 
   find_symbol_at_point: ->
     try
