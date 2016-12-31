@@ -1,4 +1,4 @@
-{View} = require 'space-pen'
+{$, View} = require 'space-pen'
 rtags = require '../rtags'
 
 module.exports =
@@ -10,17 +10,20 @@ module.exports =
     initialize: () ->
       @panel = null
       @searchCallback = null
+      @lastFocusedElement = null
 
     setSearchCallback: (callback) ->
       @searchCallback = callback
 
     show: ->
       @textbox.val('')
+      @lastFocusedElement = $(document.activeElement)
       @panel = atom.workspace.addModalPanel({item: @})
       @textbox.focus()
 
     hide: ->
       @panel?.destroy()
+      @lastFocusedElement?.focus()
 
     handleKeydown: (event) =>
       if event.keyCode == 13
