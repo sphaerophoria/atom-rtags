@@ -1,82 +1,101 @@
-{View} = require 'space-pen'
+{$, View} = require 'space-pen'
 rtags = require '../rtags'
 
-class RtagsReference extends View
+class Node extends View
   @content: ->
     @tr =>
-      @td style: 'white-space: nowrap;', =>
+      @td outlet: 'nodeTd', style: 'white-space: nowrap;', =>
         @span outlet: 'indents', style: 'white-space: pre'
         @span outlet: 'expander', class: 'icon icon-chevron-right'
-        @span outlet: "pathText", click: 'openPath', style: 'width: 100%'
-      @td outlet: 'referenceText', class: 'text-highlight', click: 'openPath', style: 'white-space: nowrap;'
-      @td outlet: "callerText", click: 'openPath', style: 'width: 100%;'
 
-  initialize: (ref, path, indentLevel, redrawCallback) ->
-    @caller = null
+  initialize: (data, indentLevel, redrawCallback) ->
+    @data = data
     @redrawCallback = redrawCallback
     @indentLevel = indentLevel
-    @path = path
+
     @children = []
-
-    [@line, @column, content, @caller] = ref
-    # Looks like atom lines and columns are 0 indexed, but all display is 1 indexed
-    displayLine = @line + 1;
-    displayColumn = @column + 1;
-    hasCaller = (@caller != null)
-
-    @expander.click(@expand)
 
     for i in [0..@indentLevel][1..]
       @indents.append('    ')
 
-    if hasCaller
-      @expander.show()
-    else
-      @expander.hide()
+    @.append(@getView())
+    @.on('click', ' *', @onClick)
+    @nodeTd.unbind('click', @onClick)
+    @expander.click(@expand)
+    @redrawCallback()
 
-    @pathText.text("#{path}:#{displayLine}:#{displayColumn}:")
-    @referenceText.text("#{content}")
-    if hasCaller
-      @callerText.text("#{@caller.signature}")
-
-  getReferences: ->
+  getNodes: ->
     ret = []
     ret.push.apply(ret, @)
     for child in @children
-      ret.push.apply(ret, child.getReferences())
+      ret.push.apply(ret, child.getNodes())
     ret
 
-  expand: =>
+  expand: (e) =>
     @expander.unbind('click', @expand)
     @expander.click(@fold)
     @expander.removeClass('icon-chevron-right')
     @expander.addClass('icon-chevron-down')
-    rtags.find_references_at_point(@caller.filename, @caller.location).then((out) =>
-      @addChildren(out)
-      @redrawCallback())
+    @retrieveChildren().then((newChildren) =>
+        @children.push.apply(@children, newChildren)
+        @redrawCallback())
+    e.stopPropagation()
 
-  fold: =>
+  fold: (e) =>
     @expander.unbind('click', @fold)
     @expander.click(@expand)
     @expander.removeClass('icon-chevron-down')
     @expander.addClass('icon-chevron-right')
     @children = []
     @redrawCallback()
+    e.stopPropagation()
 
-  openPath: ->
-    options = {
-      initialLine: @line,
-      initialColumn: @column,
-    }
-    atom.workspace.open(@path, options)
+module.exports.RtagsReferenceNode =
+class RtagsReferenceNode extends Node
+  getView: ->
+    [@line, @column, content, @caller] = @data.ref
 
-  addChildren: (res)->
-    for path, refArray of res.res
-      for ref in refArray
-        ref = new RtagsReference(ref, path, @indentLevel + 1, @redrawCallback)
-        @children.push(ref)
+    # Looks like atom lines and columns are 0 indexed, but all display is 1 indexed
+    displayLine = @line + 1;
+    displayColumn = @column + 1;
 
-module.exports =
+    hasCaller = (@caller != null)
+
+    spacer = $(document.createElement('span'))
+    spacer.width(300);
+
+    pathView = $(document.createElement('span'))
+    pathView.text("#{@data.path}:#{displayLine}:#{displayColumn}")
+    contentView = $(document.createElement('span')).addClass('text-highlight').css('white-space', 'nowrap')
+    contentView.text("#{content}")
+
+    ret = [pathView, spacer.clone(), contentView]
+
+    if hasCaller
+      callerView = $(document.createElement('span')).width('100%').addClass('text-success')
+      callerView.text("#{@caller.signature}")
+      ret.push(spacer.clone())
+      ret.push(callerView)
+    else
+      @expander.hide()
+
+    ret
+
+  retrieveChildren: ->
+    references = rtags.find_references_at_point(@caller.filename, @caller.location)
+
+    references.then((references) =>
+        ret = []
+        for path, refArray of references.res
+            for ref in refArray
+                ref = new RtagsReferenceNode({ref: ref, path: path}, @indentLevel + 1, @redrawCallback)
+                ret.push(ref)
+        ret, () -> [])
+
+  onClick: =>
+    atom.workspace.open(@data.path, {initialLine: @line, initialColumn: @column})
+
+module.exports.RtagsReferencesTreePane =
 class RtagsReferencesTreePane extends View
   @content: ->
     @div =>
@@ -92,12 +111,12 @@ class RtagsReferencesTreePane extends View
     @children = []
     @height(200)
 
-  setReferences: (res) ->
+  setItems: (items) ->
     @children = []
-    for path, refArray of res.res
-      for ref in refArray
-        ref = new RtagsReference(ref, path, 0, @redraw)
-        @children.push(ref)
+
+    for item in items
+      @children.push(item)
+
     @redraw()
     @resizeChild()
 
@@ -123,7 +142,7 @@ class RtagsReferencesTreePane extends View
   redraw: =>
     @referencesTable.children().detach()
     for rtagsReference in @children
-      for reference in rtagsReference.getReferences()
+      for reference in rtagsReference.getNodes()
         @referencesTable.append(reference)
 
   destroy: ->

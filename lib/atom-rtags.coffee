@@ -1,7 +1,7 @@
 {CompositeDisposable, Notifictaion} = require 'atom'
 
 # {AtomRtagsReferencesModel, AtomRtagsReferencesView} = require './atom-rtags-references-view'
-RtagsReferencesTreePane = require './view/references-tree-view'
+{RtagsReferencesTreePane, RtagsReferenceNode} = require './view/references-tree-view'
 RtagsSearchView = require './view/rtags-search-view'
 RtagsCodeCompleter = require './code-completer.coffee'
 rtags = require './rtags'
@@ -216,5 +216,10 @@ module.exports = AtomRtags =
       for uri, v of res.res
         atom.workspace.open uri, {'initialLine': v[0], 'initialColumn':v[1]}
     #atom.workspace.addBottomPanel({item: @referencesView})
+    references = []
+    for path, refArray of res.res
+      for ref in refArray
+        references.push(new RtagsReferenceNode({ref: ref, path:path}, 0, @referencesView.redraw))
+
     @referencesView.show()
-    @referencesView.setReferences(res)
+    @referencesView.setItems(references)

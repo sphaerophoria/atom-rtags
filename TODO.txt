@@ -6,7 +6,7 @@
 [] Make code completion use async call 
 [] Handle situation where rdm isn't started for code linting (maybe we should check every time we open a file...)
 [] Move reference to center of screen after jump
-[] Class hierarchy
 [] Mouse based navigation
-[] Symbol List
-[] Grey out areas
+[] Class hierarchy
+  [] Refactor references view to be a view for arbitrary data
+  [] Plug in class hierarchy
