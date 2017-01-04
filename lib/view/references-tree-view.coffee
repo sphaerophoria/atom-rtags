@@ -18,7 +18,9 @@ class Node extends View
     for i in [0..@indentLevel][1..]
       @indents.append('    ')
 
-    @.append(@getView())
+    view = @getView()
+    @nodeTd.append(view[0])
+    @.append(view[1..])
     @.on('click', ' *', @onClick)
     @nodeTd.unbind('click', @onClick)
     @expander.click(@expand)
@@ -61,25 +63,36 @@ class RtagsReferenceNode extends Node
 
     hasCaller = (@caller != null)
 
-    spacer = $(document.createElement('span'))
-    spacer.width(300);
+    spacer = $(document.createElement('span')).css('white-space', 'pre').text("  ")
 
-    pathView = $(document.createElement('span'))
-    pathView.text("#{@data.path}:#{displayLine}:#{displayColumn}")
-    contentView = $(document.createElement('span')).addClass('text-highlight').css('white-space', 'nowrap')
-    contentView.text("#{content}")
-
-    ret = [pathView, spacer.clone(), contentView]
-
+    # Here we display the key as the caller if we have it, if not we use the filename as an approximation
+    keyView = null;
     if hasCaller
-      callerView = $(document.createElement('span')).width('100%').addClass('text-success')
-      callerView.text("#{@caller.signature}")
-      ret.push(spacer.clone())
-      ret.push(callerView)
+      keyView = $(document.createElement('span'))
+      sigParts = @caller.signature.split('(')
+      if sigParts.length > 1
+        isFunction = true
+      else
+        isFunction = false
+
+      sigParts = sigParts[0].split(' ')
+      if sigParts.length > 1
+        keyView.text("#{sigParts[1]}")
+      else
+        keyView.text("#{sigParts[0]}")
+
+      if isFunction
+        keyView.text(keyView.text() + "()")
+
     else
+      keyView = $(document.createElement('span'))
+      keyView.text("#{@data.path}:#{displayLine}:#{displayColumn}")
       @expander.hide()
 
-    ret
+    contentView = $(document.createElement('td')).addClass('text-highlight').css('white-space', 'nowrap').width('100%')
+    contentView.text("#{content}")
+
+    [keyView, spacer, contentView]
 
   retrieveChildren: ->
     references = rtags.find_references_at_point(@caller.filename, @caller.location)
