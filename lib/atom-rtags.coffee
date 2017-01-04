@@ -53,6 +53,7 @@ module.exports = AtomRtags =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find-references-by-keyword': => @find_references_by_keyword()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:reindex-current-file': => @reindex_current_file()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:refactor-at-point': => @refactor_at_point()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:get-subclasses': => @get_subclasses()
     @current_linter_messages = {}
 
   deactivate: ->
@@ -223,3 +224,14 @@ module.exports = AtomRtags =
 
     @referencesView.show()
     @referencesView.setItems(references)
+
+  get_subclasses: ->
+    try
+      active_editor = atom.workspace.getActiveTextEditor()
+      return if not active_editor
+      return if not matched_scope(active_editor)
+      @location_stack_push()
+      res = rtags.get_subclasses active_editor.getPath(), active_editor.getCursorBufferPosition()
+      console.log(res)
+    catch err
+      atom.notifications.addError err

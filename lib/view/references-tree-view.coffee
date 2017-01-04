@@ -52,6 +52,9 @@ class Node extends View
     @redrawCallback()
     e.stopPropagation()
 
+module.exports.RtagsClassHierarchyNode =
+class RtagsClassHierarchyNode
+
 module.exports.RtagsReferenceNode =
 class RtagsReferenceNode extends Node
   getView: ->
@@ -103,7 +106,7 @@ class RtagsReferenceNode extends Node
             for ref in refArray
                 ref = new RtagsReferenceNode({ref: ref, path: path}, @indentLevel + 1, @redrawCallback)
                 ret.push(ref)
-        ret, () -> [])
+        ret)
 
   onClick: =>
     atom.workspace.open(@data.path, {initialLine: @line, initialColumn: @column})

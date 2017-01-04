@@ -59,6 +59,11 @@ extract_symbol_info_from_references = (references) ->
     strline = strline.slice col
     return strline.slice 0, strline.search(/[^a-zA-Z0-9_]/)
 
+extract_object_from_class_hierarchy_line = (line) ->
+  [name, fnloc] = line.split('\t')
+  fnloc = fnloc.split(':')
+  { name: name, fnloc: fnloc[..2], children: [] }
+
 # Takes rc references output and sticks it into a dictionary for us
 # This will be easier when I get around to fixing the rtags json output
 format_references = (out) ->
@@ -190,3 +195,39 @@ module.exports =
         ret[path].push({line: line, col: col})
       ret
       )
+
+  get_subclasses: (fn, loc) ->
+    hierarchyTxt = rc_exec ['-z', '-K', '--class-hierarchy', fn_loc(fn, loc)]
+    indentLevel = 1
+
+    hierarchy = null
+    foundSubclasses = false
+    for line in hierarchyTxt.split('\n')
+      if line != "Subclasses:" and foundSubclasses == false
+        continue
+      else if line == "Subclasses:"
+        foundSubclasses = true
+        continue
+
+      # Count leading spaces
+      numSpaces = 0
+      while line[numSpaces] == " "
+        numSpaces++
+      # each indent is 2 spaces
+      indentLevel = numSpaces / 2
+
+      if indentLevel == 0
+        continue
+
+      if indentLevel == 1
+        line = line[numSpaces..]
+        hierarchy = extract_object_from_class_hierarchy_line(line)
+        continue
+
+      current = hierarchy
+      for i in [2..indentLevel][1..]
+        current = current.children[current.children.length - 1]
+      line = line[numSpaces..]
+      current.children.push(extract_object_from_class_hierarchy_line(line))
+
+    hierarchy
