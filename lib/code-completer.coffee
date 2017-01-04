@@ -9,10 +9,12 @@ class RtagsCodeCompleter
   includionPriority: 1
   # Scrap all those other suggestions, ours are great
   excludeLowerPriority: true
-  suggestionPriority: 2
+  suggestionPriority: 1
 
   constructor: ->
     @currentCompletionLocation = new Point
+    @currentCompletionLocation = null
+    @baseCompletions = null
 
   # On input autocompletion calls this function
   getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix, activatedManually}) ->
@@ -24,15 +26,30 @@ class RtagsCodeCompleter
     newCompletionLocation = new Point
     newCompletionLocation.row = bufferPosition.row
     newCompletionLocation.column = bufferPosition.column - prefix.length
+    bufferPosition.column -= 1
+
+    if prefix[0] != @initialPrefix
+      @initialPrefix = prefix[0]
+      @currentCompletionLocation = new Point
+
+    if prefix == "."
+      prefix = ""
+      bufferPosition.column += 1
 
     if @currentCompletionLocation.compare(newCompletionLocation)
       editorText = editor.getText()
       @currentCompletionLocation = newCompletionLocation
+      # Asynchronously get results in a promise
+      @baseCompletions = new Promise (resolve) ->
+        out = rtags.rc_get_completions editor.getPath(), bufferPosition, editorText, prefix
+        resolve(out)
+      return @baseCompletions
     else
-      editorText = null
-
-    # Asynchronously get results in a promise
-    new Promise (resolve) ->
-      out = rtags.rc_get_completions editor.getPath(), editor.getCursorBufferPosition(), editorText, prefix
-      console.log(out)
-      resolve(out)
+      return @baseCompletions.then((completions) ->
+        ret = []
+        for completion in completions
+          if completion.text and completion.text[0..prefix.length - 1] == prefix
+            completion.replacementPrefix = prefix
+            ret.push(completion)
+        ret
+      )
