@@ -1,5 +1,13 @@
-# atom-rtags package
+# atom-rtags-plus
 
-A short description of your package.
+A package that attempts to make c/c++ development not terrible.
+Uses [rtags](https://github.com/Andersbakken/rtags) to provide common IDE usage patterns in atom.
 
-![A screenshot of your package](https://f.cloud.github.com/assets/69169/2290250/c35d867a-a017-11e3-86be-cd7c5bf3ff9b.gif)
+## Features
+* [Jump to definition](https://raw.githubusercontent.com/sphaerophoria/atom-rtags-plus/master/resources/jump-to-definition.webm)
+* [Find references](https://raw.githubusercontent.com/sphaerophoria/atom-rtags-plus/master/resources/references-tree.webm)
+* [Find symbol by string](https://raw.githubusercontent.com/sphaerophoria/atom-rtags-plus/master/resources/find-symbol.webm)
+* [Find virtuals](https://raw.githubusercontent.com/sphaerophoria/atom-rtags-plus/master/resources/find-virtuals.webm)
+* [Code completion](https://raw.githubusercontent.com/sphaerophoria/atom-rtags-plus/master/resources/code-completion.webm)
+* [Code Linting](https://raw.githubusercontent.com/sphaerophoria/atom-rtags-plus/master/resources/code-linting.png)
+* And maybe more!
