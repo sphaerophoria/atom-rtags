@@ -5,6 +5,8 @@ RtagsReferencesTreePane = require './view/references-tree-view'
 RtagsSearchView = require './view/rtags-search-view'
 RtagsCodeCompleter = require './code-completer.coffee'
 rtags = require './rtags'
+fs = require 'fs'
+readline = require 'readline'
 
 matched_scope = (editor) ->
   for s in ['source.cpp', 'source.c', 'source.h', 'source.hpp']
@@ -83,13 +85,36 @@ module.exports = AtomRtags =
           if error.$.severity != "skipped" and error.$.severity != "none"
             start_point = [error.$.line - 1, error.$.column - 1]
             end_point = [error.$.line - 1]
-            if error.$.length
-              end_point.push error.$.column - 1 + error.$.length - 1
+            filePath = file.$.name
 
-            current_linter_messages[file.$.name].push {
+            # This kind of sucks...
+            # * read the whole file into memory
+            # * count lines until we get to the given line
+            # * count forwards until we get to a non-identifying character
+            fileBuf = fs.readFileSync(filePath)
+            currentLine = 0
+            bufferPos = 0
+            errorLine = parseInt(error.$.line, 10)
+            while true
+              if fileBuf[bufferPos] == '\n'.charCodeAt(0)
+                currentLine++
+              if currentLine == errorLine - 1
+                break
+              bufferPos++
+
+            i = parseInt(error.$.column,10)
+            bufferPos += i
+            for c in fileBuf[bufferPos..]
+              if !/[a-zA-Z0-9_]/.test(String.fromCharCode(c))
+                console.log("found it")
+                end_point.push(i - 1)
+                break;
+              i++
+
+            current_linter_messages[filePath].push {
               type: error.$.severity,
               text: error.$.message,
-              filePath: file.$.name,
+              filePath: filePath,
               severity: error.$.severity,
               range: [start_point , end_point]
             }
