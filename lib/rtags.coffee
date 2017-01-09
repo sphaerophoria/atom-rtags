@@ -131,13 +131,39 @@ module.exports =
       out = rc_exec ['--current-file='+fn, '-b', '--unsaved-file='+fn+':'+current_content.length, '--code-complete-at', fn_loc(fn, loc), '--synchronous-completions', '--code-complete-prefix='+prefix], true, current_content
     else
       out = rc_exec ['--current-file='+fn, '-b', '--code-complete-at', fn_loc(fn, loc), '--synchronous-completions', '--code-complete-prefix='+prefix]
-    # TODO: Parse in form completion signiture(...) annotation parent
     ret = []
+    # TODO: This is terrible to read
     for line in out.split "\n"
-      segments = line.split " "
-      if segments[0] != ""
+      sig_args = line.split("(")
+      sig = sig_args[0]
+      args = sig_args[1]?.split(")")[0].split(",")
+      if args == undefined
+        args = []
+
+      if sig == ""
         continue
-      ret.push({ "text": segments[1]})
+      segments = sig.split " "
+
+      snippet = ""
+      snippet += segments[1]
+      if args.length > 0
+        snippet += "("
+      i = 1
+      for arg in args
+        snippet += "${#{i}:#{arg}}"
+        i++
+        if (i <= args.length)
+          snippet+= ","
+
+      if args.length > 0
+        snippet += ")"
+
+      item = {"snippet": snippet}
+
+      if args.length > 0
+        item.type = 'function'
+
+      ret.push(item)
     ret
 
   find_symbols_by_keyword: (keyword) ->
