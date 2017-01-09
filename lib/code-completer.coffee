@@ -14,7 +14,8 @@ class RtagsCodeCompleter
   constructor: ->
     @currentCompletionLocation = new Point
     @currentCompletionLocation = null
-    @baseCompletions = null
+    @baseCompletionsPromise = null
+    @baseCompletions = []
 
   # On input autocompletion calls this function
   getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix, activatedManually}) ->
@@ -40,16 +41,18 @@ class RtagsCodeCompleter
       editorText = editor.getText()
       @currentCompletionLocation = newCompletionLocation
       # Asynchronously get results in a promise
-      @baseCompletions = new Promise((resolve) -> resolve([editor, bufferPosition, editorText, prefix])).then(
+      @baseCompletionsPromise = new Promise((resolve) -> resolve([editor, bufferPosition, editorText, prefix])).then(
         (input) ->
           [editor, bufferPosition, editorText, prefix] = input
-          rtags.rc_get_completions editor.getPath(), bufferPosition, editorText, prefix
+          out = rtags.rc_get_completions editor.getPath(), bufferPosition, editorText, prefix
+          @baseCompletions = out
+          @baseCompletions
       )
-      return @baseCompletions
+      return @baseCompletionsPromise
     else
-      return @baseCompletions.then((completions) ->
+      return @baseCompletionsPromise.then(() ->
         ret = []
-        for completion in completions
+        for completion in @baseCompletions
           if completion.snippet and completion.snippet[0..prefix.length - 1] == prefix
             completion.replacementPrefix = prefix
             ret.push(completion)
