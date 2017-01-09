@@ -3,10 +3,10 @@
   [] properly handle no references found case in tree view
   [] add ability to toggle pannel
   [] Allow for multiple references views (tabs?)
-[] Code completion (fix prefixes)
-  [] fix prefixes
+[] Make code completion use async call 
 [] Handle situation where rdm isn't started for code linting (maybe we should check every time we open a file...)
-[] Clean up underlining on linting
 [] Move reference to center of screen after jump
 [] Class hierarchy
 [] Mouse based navigation
+[] Symbol List
+[] Grey out areas

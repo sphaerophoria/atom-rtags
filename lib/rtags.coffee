@@ -127,43 +127,49 @@ module.exports =
 
   # This is the calldown for autocompletion. Sticks our current buffer into stdin and then gets results out of rtags
   rc_get_completions: (fn, loc, current_content, prefix) ->
-    if current_content
-      out = rc_exec ['--current-file='+fn, '-b', '--unsaved-file='+fn+':'+current_content.length, '--code-complete-at', fn_loc(fn, loc), '--synchronous-completions', '--code-complete-prefix='+prefix], true, current_content
-    else
-      out = rc_exec ['--current-file='+fn, '-b', '--code-complete-at', fn_loc(fn, loc), '--synchronous-completions', '--code-complete-prefix='+prefix]
-    ret = []
-    # TODO: This is terrible to read
-    for line in out.split "\n"
-      sig_args = line.split("(")
-      sig = sig_args[0]
-      args = sig_args[1]?.split(")")[0].split(",")
-      if args == undefined
-        args = []
+    ret = new Promise((resolve) ->
 
-      if sig == ""
-        continue
-      segments = sig.split " "
+      rc_cmd = atom.config.get 'atom-rtags-plus.rcCommand'
+      opt = ['--current-file='+fn, '-b', '--unsaved-file='+fn+':'+current_content.length, '--code-complete-at', fn_loc(fn, loc), '--synchronous-completions', '--code-complete-prefix='+prefix]
+      cmd = rc_cmd + ' --no-color ' + opt.join(' ')
+      child = child_process.exec(cmd, (error, stdout, stderr) ->
+        ret = []
+        # TODO: This is terrible to read
+        for line in stdout.split "\n"
+          sig_args = line.split("(")
+          sig = sig_args[0]
+          args = sig_args[1]?.split(")")[0].split(",")
+          if args == undefined
+            args = []
 
-      snippet = ""
-      snippet += segments[1]
-      if args.length > 0
-        snippet += "("
-      i = 1
-      for arg in args
-        snippet += "${#{i}:#{arg}}"
-        i++
-        if (i <= args.length)
-          snippet+= ","
+          if sig == ""
+            continue
+          segments = sig.split " "
 
-      if args.length > 0
-        snippet += ")"
+          snippet = ""
+          snippet += segments[1]
+          if args.length > 0
+            snippet += "("
+          i = 1
+          for arg in args
+            snippet += "${#{i}:#{arg}}"
+            i++
+            if (i <= args.length)
+              snippet+= ","
 
-      item = {"snippet": snippet}
+          if args.length > 0
+            snippet += ")"
 
-      if args.length > 0
-        item.type = 'function'
+          item = {"snippet": snippet}
 
-      ret.push(item)
+          if args.length > 0
+            item.type = 'function'
+
+          ret.push(item)
+        resolve(ret)
+        )
+      child.stdin.write(current_content)
+    )
     ret
 
   find_symbols_by_keyword: (keyword) ->

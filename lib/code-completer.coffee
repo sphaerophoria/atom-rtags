@@ -41,13 +41,11 @@ class RtagsCodeCompleter
       editorText = editor.getText()
       @currentCompletionLocation = newCompletionLocation
       # Asynchronously get results in a promise
-      @baseCompletionsPromise = new Promise((resolve) -> resolve([editor, bufferPosition, editorText, prefix])).then(
-        (input) ->
-          [editor, bufferPosition, editorText, prefix] = input
-          out = rtags.rc_get_completions editor.getPath(), bufferPosition, editorText, prefix
-          @baseCompletions = out
-          @baseCompletions
-      )
+      @baseCompletionsPromise = rtags.rc_get_completions editor.getPath(), bufferPosition, editorText, prefix
+      @baseCompletionsPromise.then((data) ->
+        @baseCompletions = data
+        @baseCompletions
+        )
       return @baseCompletionsPromise
     else
       return @baseCompletionsPromise.then(() ->
