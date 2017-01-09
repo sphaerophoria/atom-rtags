@@ -1,7 +1,7 @@
 {
   "name": "atom-rtags-plus",
   "main": "./lib/atom-rtags",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Rtags support for Atom Editor",
   "keywords": [],
   "repository": "https://github.com/sphaerophoria/atom-rtags-plus",
