@@ -51,12 +51,9 @@ class RtagsReference extends View
     @expander.click(@fold)
     @expander.removeClass('icon-chevron-right')
     @expander.addClass('icon-chevron-down')
-    try
-      @addChildren(rtags.find_references_at_point(@caller.filename, @caller.location))
-    catch err
-      console.log(err)
-
-    @redrawCallback()
+    rtags.find_references_at_point(@caller.filename, @caller.location).then((out) =>
+      @addChildren(out)
+      @redrawCallback())
 
   fold: =>
     @expander.unbind('click', @fold)

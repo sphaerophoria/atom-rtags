@@ -21,26 +21,15 @@ rc_exec =  (opt, retry=true, input=null) ->
   rc_cmd = atom.config.get 'atom-rtags-plus.rcCommand'
   cmd = rc_cmd + ' --no-color ' + opt.join(' ')
   #console.log 'exec ' + cmd
-  try
-    if input == null
-      out = child_process.execSync cmd
-    else
-      out = child_process.execSync cmd, {"input": input}
-  catch err
-    out = err.output.toString()
-    if out.includes('Can\'t seem to connect to server')
-      if retry
-        @rdm_start
-        return rc_exec opt, false
-      else
-        throw 'Rtags rdm server is not running.'
-    if out.includes('Not indexed')
-      throw 'This file is not indexed in Rtags.'
-    if err.stdout.length == 0 and err.stderr.length == 0
-      throw 'No results'
-    if err.status == 1
-      throw 'Undefined error while executing rc command\n\n'+ cmd + '\n\nOutput: ' + out
-  return out.toString()
+  new Promise((resolve, reject) ->
+    child = child_process.exec(cmd, (error, stdout, stderr) ->
+      if (error)
+        reject(stdout)
+      resolve(stdout)
+      )
+    if input != null
+      child.stdin.end(input)
+    )
 
 # Start rc diagnostics. Called on startup used for linter
 # TODO: handle clase where rdm isn't up yet
@@ -100,26 +89,28 @@ format_references = (out) ->
 module.exports =
   # Finds symbol at fn: filename, loc: location
   find_symbol_at_point: (fn, loc) ->
-    out = rc_exec ['--current-file='+fn, '-f', fn_loc(fn, loc), '-K']
-    [fn, row, col] = out.split ":"
-    return [fn, row-1, col-1]
+    promise = rc_exec ['--current-file='+fn, '-f', fn_loc(fn, loc), '-K']
+    promise.then((out) ->
+      [fn, row, col] = out.split ":"
+      return [fn, row-1, col-1]
+    )
 
   # Finds references at fn: filename, loc: locaitiopn
   # does not include declarations
   find_references_at_point: (fn, loc) ->
-    out = rc_exec ['--current-file='+fn, '-r', fn_loc(fn, loc), '-K', '--containing-function-location', '--containing-function']
-    format_references(out)
+    promise = rc_exec ['--current-file='+fn, '-r', fn_loc(fn, loc), '-K', '--containing-function-location', '--containing-function']
+    promise.then((out) -> format_references(out))
 
   # Finds references at fn: filename, loc: location
   # includes declarations
   find_all_references_at_point: (fn, loc) ->
-    out = rc_exec ['--current-file='+fn, '-r', fn_loc(fn, loc), '-e', '-K']
-    format_references(out)
+    promise = rc_exec ['--current-file='+fn, '-r', fn_loc(fn, loc), '-e', '-K']
+    promise.then((out) -> format_references(out))
 
   # Finds virtual overloads for function under curosor
   find_virtuals_at_point: (fn, loc) ->
-    out = rc_exec ['--current-file='+fn, '-r', fn_loc(fn, loc), '-K', '-k']
-    format_references(out)
+    promise = rc_exec ['--current-file='+fn, '-r', fn_loc(fn, loc), '-K', '-k']
+    promise.then((out) -> format_references(out))
 
   # Starts rc diagnostics
   rc_diagnostics_start: (callback) ->
@@ -127,62 +118,55 @@ module.exports =
 
   # This is the calldown for autocompletion. Sticks our current buffer into stdin and then gets results out of rtags
   rc_get_completions: (fn, loc, current_content, prefix) ->
-    ret = new Promise((resolve) ->
+    promise = rc_exec ['--current-file='+fn, '-b', '--unsaved-file='+fn+':'+current_content.length, '--code-complete-at', fn_loc(fn, loc), '--synchronous-completions', '--code-complete-prefix='+prefix], true, current_content
+    promise.then((out) ->
+      ret = []
+      # TODO: This is terrible to read
+      for line in out.split "\n"
+        sig_args = line.split("(")
+        sig = sig_args[0]
+        args = sig_args[1]?.split(")")[0].split(",")
+        if args == undefined
+          args = []
 
-      rc_cmd = atom.config.get 'atom-rtags-plus.rcCommand'
-      opt = ['--current-file='+fn, '-b', '--unsaved-file='+fn+':'+current_content.length, '--code-complete-at', fn_loc(fn, loc), '--synchronous-completions', '--code-complete-prefix='+prefix]
-      cmd = rc_cmd + ' --no-color ' + opt.join(' ')
-      child = child_process.exec(cmd, (error, stdout, stderr) ->
-        ret = []
-        # TODO: This is terrible to read
-        for line in stdout.split "\n"
-          sig_args = line.split("(")
-          sig = sig_args[0]
-          args = sig_args[1]?.split(")")[0].split(",")
-          if args == undefined
-            args = []
+        if sig == ""
+          continue
+        segments = sig.split " "
 
-          if sig == ""
-            continue
-          segments = sig.split " "
+        snippet = ""
+        snippet += segments[1]
+        if args.length > 0
+          snippet += "("
+        i = 1
+        for arg in args
+          snippet += "${#{i}:#{arg}}"
+          i++
+          if (i <= args.length)
+            snippet+= ","
 
-          snippet = ""
-          snippet += segments[1]
-          if args.length > 0
-            snippet += "("
-          i = 1
-          for arg in args
-            snippet += "${#{i}:#{arg}}"
-            i++
-            if (i <= args.length)
-              snippet+= ","
+        if args.length > 0
+          snippet += ")"
 
-          if args.length > 0
-            snippet += ")"
+        item = {"snippet": snippet}
 
-          item = {"snippet": snippet}
+        if args.length > 0
+          item.type = 'function'
 
-          if args.length > 0
-            item.type = 'function'
-
-          ret.push(item)
-        resolve(ret)
-        )
-      child.stdin.write(current_content)
-    )
-    ret
+        ret.push(item)
+      ret
+      )
 
   find_symbols_by_keyword: (keyword) ->
     if !keyword
-      throw 'No query'
-    out = rc_exec ['-z', '-K', '-F', keyword, '--wildcard-symbol-names']
-    format_references(out)
+      return Promise.reject("No Query")
+    promise = rc_exec ['-z', '-K', '-F', keyword, '--wildcard-symbol-names']
+    promise.then((out) -> format_references(out))
 
   find_references_by_keyword: (keyword) ->
     if !keyword
-      throw 'No query'
-    out = rc_exec ['-z', '-K', '-R', keyword, '--wildcard-symbol-names']
-    format_references(out)
+      return Promise.reject("No Query")
+    promise = rc_exec ['-z', '-K', '-R', keyword, '--wildcard-symbol-names']
+    promise.then((out) -> format_references(out))
 
   reindex_current_file: (fn) ->
     rc_exec ['-V', fn]

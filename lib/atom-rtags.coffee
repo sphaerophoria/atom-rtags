@@ -6,7 +6,6 @@ RtagsSearchView = require './view/rtags-search-view'
 RtagsCodeCompleter = require './code-completer.coffee'
 rtags = require './rtags'
 fs = require 'fs'
-readline = require 'readline'
 
 matched_scope = (editor) ->
   for s in ['source.cpp', 'source.c', 'source.h', 'source.hpp']
@@ -49,18 +48,14 @@ module.exports = AtomRtags =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find-references-at-point': => @find_references_at_point()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find-all-references-at-point': => @find_all_references_at_point()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find-virtuals-at-point': => @find_virtuals_at_point()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:location-stack-forward': => @location_stack_forward()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:location-stack-back': => @location_stack_back()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find-symbols-by-keyword': => @find_symbols_by_keyword()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find-references-by-keyword': => @find_references_by_keyword()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags:reindex-current-file': => @reindex_current_file()
-    @location = {index:0, stack:[]}
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:reindex-current-file': => @reindex_current_file()
     @current_linter_messages = {}
 
   deactivate: ->
     @subscriptions?.dispose()
     @subscriptions = null
-    @location = null
     @diagnostics.kill()
 
   # Toplevel function for linting. Provides a callback for every time rtags diagnostics outputs data
@@ -133,102 +128,63 @@ module.exports = AtomRtags =
 
 
   find_symbol_at_point: ->
-    try
-      active_editor = atom.workspace.getActiveTextEditor()
-      return if not active_editor
-      return if not matched_scope(active_editor)
-      @location_stack_push()
-      [uri, r, c] = rtags.find_symbol_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
+    active_editor = atom.workspace.getActiveTextEditor()
+    return if not active_editor
+    return if not matched_scope(active_editor)
+    rtags.find_symbol_at_point(active_editor.getPath(), active_editor.getCursorBufferPosition()).then(([uri,r,c]) ->
       atom.workspace.open uri, {'initialLine': r, 'initialColumn':c}
-    catch err
-      atom.notifications.addError err
+    , (error) -> atom.notifications.addError(error)
+    )
 
   find_references_at_point: ->
-    try
-      active_editor = atom.workspace.getActiveTextEditor()
-      return if not active_editor
-      return if not matched_scope(active_editor)
-      @location_stack_push()
-      res = rtags.find_references_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
-      @display_results_in_references(res)
-    catch err
-      atom.notifications.addError err
+    active_editor = atom.workspace.getActiveTextEditor()
+    return if not active_editor
+    return if not matched_scope(active_editor)
+    promise = rtags.find_references_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
+    promise.then((out) =>
+      @display_results_in_references(out)
+    , (error) -> atom.notifications.addError(error))
 
   find_all_references_at_point: ->
-    try
-      active_editor = atom.workspace.getActiveTextEditor()
-      return if not active_editor
-      return if not matched_scope(active_editor)
-      @location_stack_push()
-      res = rtags.find_all_references_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
-      @display_results_in_references(res)
-    catch err
-      atom.notifications.addError err
+    active_editor = atom.workspace.getActiveTextEditor()
+    return if not active_editor
+    return if not matched_scope(active_editor)
+    rtags.find_all_references_at_point(active_editor.getPath(), active_editor.getCursorBufferPosition())
+    .then((out) =>
+      @display_results_in_references(out)
+    , (err) -> atom.notifications.addError(err))
 
   find_virtuals_at_point: ->
-    try
-      active_editor = atom.workspace.getActiveTextEditor()
-      return if not active_editor
-      return if not matched_scope(active_editor)
-      @location_stack_push()
-      res = rtags.find_virtuals_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
-      @display_results_in_references(res)
-    catch err
-      atom.notifications.addError err
+    active_editor = atom.workspace.getActiveTextEditor()
+    return if not active_editor
+    return if not matched_scope(active_editor)
+    rtags.find_virtuals_at_point(active_editor.getPath(), active_editor.getCursorBufferPosition()).then((out) =>
+      @display_results_in_references(out)
+    , (err) -> atom.notifications.addError(err))
 
   find_symbols_by_keyword: ->
     findSymbolCallback = (query) =>
-      try
-        out = rtags.find_symbols_by_keyword(query)
+      rtags.find_symbols_by_keyword(query).then((out) =>
         @display_results_in_references(out)
-      catch err
-        atom.notifications.addError(err)
+      , (err) -> atom.notifications.addError(err))
 
     @searchView.setSearchCallback(findSymbolCallback)
     @searchView.show()
 
   find_references_by_keyword: ->
     findReferencesCallback = (query) =>
-      try
-        out = rtags.find_references_by_keyword(query)
+      rtags.find_references_by_keyword(query).then((out) =>
         @display_results_in_references(out)
-      catch err
-        atom.notifications.addError(err)
+      , (err) -> atom.notifications.addError(err))
 
     @searchView.setSearchCallback(findReferencesCallback)
     @searchView.show()
 
   reindex_current_file: ->
-    try
-      active_editor = atom.workspace.getActiveTextEditor()
-      return if not active_editor
-      return if not matched_scope(active_editor)
-      rtags.reindex_current_file active_editor.getPath()
-    catch err
-      atom.notifications.addError err
-
-  location_stack_jump: (howmuch) ->
-    loc =  @location.stack[@location.index+howmuch]
-    if loc
-      atom.workspace.open loc[0], {'initialLine': loc[1].row, 'initialColumn':loc[1].column}
-      @location.index += howmuch
-
-  location_stack_forward: ->
-    @location_stack_jump +1
-
-  location_stack_back: ->
-    if @location.stack.length == @location.index
-      @location_stack_push()
-      @location_stack_jump -2
-    else
-      @location_stack_jump -1
-
-  location_stack_push: ->
     active_editor = atom.workspace.getActiveTextEditor()
     return if not active_editor
-    @location.stack.length = @location.index
-    @location.stack.push [active_editor.getPath(), active_editor.getCursorBufferPosition()]
-    @location.index = @location.stack.length
+    return if not matched_scope(active_editor)
+    rtags.reindex_current_file(active_editor.getPath())
 
   display_results_in_references: (res) ->
     if res.matchCount == 1

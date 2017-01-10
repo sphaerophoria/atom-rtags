@@ -44,8 +44,7 @@ class RtagsCodeCompleter
       @baseCompletionsPromise = rtags.rc_get_completions editor.getPath(), bufferPosition, editorText, prefix
       @baseCompletionsPromise.then((data) ->
         @baseCompletions = data
-        @baseCompletions
-        )
+        @baseCompletions)
       return @baseCompletionsPromise
     else
       return @baseCompletionsPromise.then(() ->
