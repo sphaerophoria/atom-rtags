@@ -10,20 +10,25 @@ fn_loc = (fn, loc) ->
 rdm_start = () ->
   rdm_cmd = atom.config.get 'atom-rtags-plus.rdmCommand'
   if rdm_cmd
-    child_process.exec rdm_cmd, (err, stdout, stderr) ->
-      atom.notifications.addError "Rtags rdm server died", stdout, stderr
+    child_process.exec(rdm_cmd)
+    return "Starting rdm... Please try again"
+  else
+    return "Please start rdm"
 
 # Params:
 #  opt: command line arguments for rtags
-#  retry: whether or not to retry
 #  input: What to pipe to stdin. null if nothing
-rc_exec =  (opt, retry=true, input=null) ->
+rc_exec =  (opt, input=null) ->
   rc_cmd = atom.config.get 'atom-rtags-plus.rcCommand'
   cmd = rc_cmd + ' --no-color ' + opt.join(' ')
   #console.log 'exec ' + cmd
-  new Promise((resolve, reject) ->
-    child = child_process.exec(cmd, (error, stdout, stderr) ->
+  new Promise((resolve, reject) =>
+    child = child_process.exec(cmd, (error, stdout, stderr) =>
       if (error)
+        if stdout.includes("Can't seem to connect to server")
+          reject(rdm_start())
+        if stdout.length == 0
+          reject("No Results")
         reject(stdout)
       resolve(stdout)
       )
