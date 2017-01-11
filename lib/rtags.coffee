@@ -123,7 +123,7 @@ module.exports =
 
   # This is the calldown for autocompletion. Sticks our current buffer into stdin and then gets results out of rtags
   rc_get_completions: (fn, loc, current_content, prefix) ->
-    promise = rc_exec ['--current-file='+fn, '-b', '--unsaved-file='+fn+':'+current_content.length, '--code-complete-at', fn_loc(fn, loc), '--synchronous-completions', '--code-complete-prefix='+prefix], true, current_content
+    promise = rc_exec ['--current-file='+fn, '-b', '--unsaved-file='+fn+':'+current_content.length, '--code-complete-at', fn_loc(fn, loc), '--synchronous-completions', '--code-complete-prefix='+prefix], current_content
     promise.then((out) ->
       ret = []
       # TODO: This is terrible to read
