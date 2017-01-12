@@ -6,6 +6,7 @@ RtagsSearchView = require './view/rtags-search-view'
 RtagsCodeCompleter = require './code-completer.coffee'
 rtags = require './rtags'
 fs = require 'fs'
+child_process = require 'child_process'
 
 matched_scope = (editor) ->
   for s in ['source.cpp', 'source.c', 'source.h', 'source.hpp']
@@ -51,6 +52,7 @@ module.exports = AtomRtags =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find-symbols-by-keyword': => @find_symbols_by_keyword()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:find-references-by-keyword': => @find_references_by_keyword()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:reindex-current-file': => @reindex_current_file()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:refactor-at-point': => @refactor_at_point()
     @current_linter_messages = {}
 
   deactivate: ->
@@ -185,6 +187,29 @@ module.exports = AtomRtags =
     return if not active_editor
     return if not matched_scope(active_editor)
     rtags.reindex_current_file(active_editor.getPath())
+
+  refactor_at_point: ->
+    active_editor = atom.workspace.getActiveTextEditor()
+    return if not active_editor
+    return if not matched_scope(active_editor)
+    refactorCallback = (replacement) =>
+      rtags.get_refactor_locations(active_editor.getPath(), active_editor.getCursorBufferPosition())
+      .then((paths) ->
+        for path, pathObjs of paths
+          cmdStr = 'sed -i \''
+          for pathObj in pathObjs
+            cmdStr += pathObj.line
+            cmdStr += 's/^\\(.\\{'
+            cmdStr += parseInt(pathObj.col, 10) - 1
+            cmdStr += '\\}\\)[a-zA-Z0-9_]*/\\1' + replacement + '/;'
+          cmdStr += '\' ' + path
+          # Shell out to sed to do the replacement
+          child_process.exec(cmdStr)
+          console.log(cmdStr)
+        )
+
+    @searchView.setSearchCallback(refactorCallback)
+    @searchView.show()
 
   display_results_in_references: (res) ->
     if res.matchCount == 1

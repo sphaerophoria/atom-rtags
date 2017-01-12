@@ -175,3 +175,18 @@ module.exports =
 
   reindex_current_file: (fn) ->
     rc_exec ['-V', fn]
+
+  get_refactor_locations: (fn, loc) ->
+    promise = rc_exec ['-z', '-e', '--rename', '-N', '-r', fn_loc(fn, loc), '-K']
+    # Group by file for easier use
+    promise.then((out) ->
+      ret = []
+      for line in out.split('\n')
+        if line == ""
+          continue
+        [path, line, col] = line.split(':')
+        if ret[path] == undefined
+          ret[path] = []
+        ret[path].push({line: line, col: col})
+      ret
+      )

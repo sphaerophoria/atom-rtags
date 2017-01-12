@@ -5,7 +5,7 @@ module.exports =
   class RtagsSearchView extends View
     @content: ->
       @form =>
-        @input class: 'input-text native-key-bindings', type: 'text', keyup: 'handleKeydown', outlet: 'textbox'
+        @input class: 'input-text native-key-bindings', type: 'text', outlet: 'textbox'
 
     initialize: () ->
       @panel = null
@@ -20,10 +20,13 @@ module.exports =
       @lastFocusedElement = $(document.activeElement)
       @panel = atom.workspace.addModalPanel({item: @})
       @textbox.focus()
+      @textbox.keydown(@handleKeydown)
+
 
     hide: ->
       @panel?.destroy()
       @lastFocusedElement?.focus()
+      @textbox.unbind('keydown', @handleKeydown)
 
     handleKeydown: (event) =>
       if event.keyCode == 13
