@@ -195,6 +195,7 @@ module.exports = AtomRtags =
     refactorCallback = (replacement) =>
       rtags.get_refactor_locations(active_editor.getPath(), active_editor.getCursorBufferPosition())
       .then((paths) ->
+        #TODO: We should probably add some form of confirmation dialogue here...
         for path, pathObjs of paths
           cmdStr = 'sed -i \''
           for pathObj in pathObjs
@@ -205,7 +206,6 @@ module.exports = AtomRtags =
           cmdStr += '\' ' + path
           # Shell out to sed to do the replacement
           child_process.exec(cmdStr)
-          console.log(cmdStr)
         )
 
     @searchView.setSearchCallback(refactorCallback)
