@@ -2,6 +2,7 @@
 
 # {AtomRtagsReferencesModel, AtomRtagsReferencesView} = require './atom-rtags-references-view'
 {RtagsReferencesTreePane, RtagsReferenceNode} = require './view/references-tree-view'
+{RtagsRefactorConfirmationNode, RtagsRefactorConfirmationPane} = require './view/refactor-confirmation-view'
 RtagsSearchView = require './view/rtags-search-view'
 RtagsCodeCompleter = require './code-completer.coffee'
 rtags = require './rtags'
@@ -196,17 +197,12 @@ module.exports = AtomRtags =
     refactorCallback = (replacement) =>
       rtags.get_refactor_locations(active_editor.getPath(), active_editor.getCursorBufferPosition())
       .then((paths) ->
-        #TODO: We should probably add some form of confirmation dialogue here...
-        for path, pathObjs of paths
-          cmdStr = 'sed -i \''
-          for pathObj in pathObjs
-            cmdStr += pathObj.line
-            cmdStr += 's/^\\(.\\{'
-            cmdStr += parseInt(pathObj.col, 10) - 1
-            cmdStr += '\\}\\)[a-zA-Z0-9_]*/\\1' + replacement + '/;'
-          cmdStr += '\' ' + path
-          # Shell out to sed to do the replacement
-          child_process.exec(cmdStr)
+        items = []
+        confirmationPane = new RtagsRefactorConfirmationPane
+        for path, refactorLines of paths
+          items.push(new RtagsRefactorConfirmationNode({path: path, refactorLines: refactorLines, replacement: replacement}, 0, confirmationPane.referencesTree.redraw))
+        confirmationPane.show()
+        confirmationPane.referencesTree.setItems(items)
         )
 
     @searchView.setSearchCallback(refactorCallback)
@@ -220,10 +216,10 @@ module.exports = AtomRtags =
     references = []
     for path, refArray of res.res
       for ref in refArray
-        references.push(new RtagsReferenceNode({ref: ref, path:path}, 0, @referencesView.redraw))
+        references.push(new RtagsReferenceNode({ref: ref, path:path}, 0, @referencesView.referencesTree.redraw))
 
     @referencesView.show()
-    @referencesView.setItems(references)
+    @referencesView.referencesTree.setItems(references)
 
   get_subclasses: ->
     try

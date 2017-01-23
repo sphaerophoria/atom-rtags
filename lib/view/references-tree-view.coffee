@@ -1,56 +1,57 @@
 {$, View} = require 'space-pen'
 rtags = require '../rtags'
 
-class Node extends View
-  @content: ->
-    @tr =>
-      @td outlet: 'nodeTd', style: 'white-space: nowrap;', =>
-        @span outlet: 'indents', style: 'white-space: pre'
-        @span outlet: 'expander', class: 'icon icon-chevron-right'
+module.exports.Node =
+    class Node extends View
+      @content: ->
+        @tr =>
+          @td outlet: 'nodeTd', style: 'white-space: nowrap;', =>
+            @span outlet: 'indents', style: 'white-space: pre'
+            @span outlet: 'expander', class: 'icon icon-chevron-right'
 
-  initialize: (data, indentLevel, redrawCallback) ->
-    @data = data
-    @redrawCallback = redrawCallback
-    @indentLevel = indentLevel
+      initialize: (data, indentLevel, redrawCallback) ->
+        @data = data
+        @redrawCallback = redrawCallback
+        @indentLevel = indentLevel
 
-    @children = []
+        @children = []
 
-    for i in [0..@indentLevel][1..]
-      @indents.append('    ')
+        for i in [0..@indentLevel][1..]
+          @indents.append('    ')
 
-    view = @getView()
-    @nodeTd.append(view[0])
-    @.append(view[1..])
-    @.on('click', ' *', @onClick)
-    @nodeTd.unbind('click', @onClick)
-    @expander.click(@expand)
-    @redrawCallback()
+        view = @getView()
+        @nodeTd.append(view[0])
+        @.append(view[1..])
+        @.on('click', ' *', @onClick)
+        @nodeTd.unbind('click', @onClick)
+        @expander.click(@expand)
+        @redrawCallback()
 
-  getNodes: ->
-    ret = []
-    ret.push.apply(ret, @)
-    for child in @children
-      ret.push.apply(ret, child.getNodes())
-    ret
+      getNodes: ->
+        ret = []
+        ret.push.apply(ret, @)
+        for child in @children
+          ret.push.apply(ret, child.getNodes())
+        ret
 
-  expand: (e) =>
-    @expander.unbind('click', @expand)
-    @expander.click(@fold)
-    @expander.removeClass('icon-chevron-right')
-    @expander.addClass('icon-chevron-down')
-    @retrieveChildren().then((newChildren) =>
-        @children.push.apply(@children, newChildren)
-        @redrawCallback())
-    e.stopPropagation()
+      expand: (e) =>
+        @expander.unbind('click', @expand)
+        @expander.click(@fold)
+        @expander.removeClass('icon-chevron-right')
+        @expander.addClass('icon-chevron-down')
+        @retrieveChildren().then((newChildren) =>
+            @children.push.apply(@children, newChildren)
+            @redrawCallback())
+        e.stopPropagation()
 
-  fold: (e) =>
-    @expander.unbind('click', @fold)
-    @expander.click(@expand)
-    @expander.removeClass('icon-chevron-down')
-    @expander.addClass('icon-chevron-right')
-    @children = []
-    @redrawCallback()
-    e.stopPropagation()
+      fold: (e) =>
+        @expander.unbind('click', @fold)
+        @expander.click(@expand)
+        @expander.removeClass('icon-chevron-down')
+        @expander.addClass('icon-chevron-right')
+        @children = []
+        @redrawCallback()
+        e.stopPropagation()
 
 module.exports.RtagsClassHierarchyNode =
 class RtagsClassHierarchyNode
@@ -111,30 +112,16 @@ class RtagsReferenceNode extends Node
   onClick: =>
     atom.workspace.open(@data.path, {initialLine: @line, initialColumn: @column})
 
-module.exports.RtagsReferencesTreePane =
-class RtagsReferencesTreePane extends View
+module.exports.ResizeHandleView =
+class ResizeHandleView extends View
   @content: ->
-    @div =>
-      @div outlet: 'resizeHandle', style: 'height: 8px; cursor: row-resize', mouseDown: 'resizeStarted', mouseUp: 'resizeStopped'
-      @tag 'header', outlet: 'header', =>
-        @h2 'Rtags References', style: 'display: inline-block;'
-        @span class: 'icon icon-x pull-right', click: 'destroy'
-      @div style: 'overflow: auto;', outlet: 'referencesTableDiv', =>
-        @table class: 'rtags-references-table', outlet: 'referencesTable'
+    @div style: 'height: 8px; cursor: row-resize', mouseDown: 'resizeStarted', mouseUp: 'resizeStopped'
 
-  initialize: ->
-    @panel = null
-    @children = []
-    @height(200)
+  initialize: (vertical=true) ->
+    @vertical = vertical
 
-  setItems: (items) ->
-    @children = []
-
-    for item in items
-      @children.push(item)
-
-    @redraw()
-    @resizeChild()
+  setResizee: (resizee) ->
+    @resizee = resizee
 
   resizeStarted: ->
     document.addEventListener('mousemove', @resize)
@@ -145,21 +132,59 @@ class RtagsReferencesTreePane extends View
     document.removeEventListener('mouseup', @resizeStopped)
 
   resize: (event) =>
-    boundingBox = @element.getBoundingClientRect()
-    @height(boundingBox.bottom - event.pageY)
-    @resizeChild()
+    boundingBox = @parentView.element.getBoundingClientRect()
+    if (@vertical)
+      currentHeight = @resizee.height()
+      heightDiff = @offset().top - event.pageY
+      @resizee.height(currentHeight + heightDiff)
+    else
+      atom.notifications.addError("Unimplemented horizontal resize")
 
-  resizeChild: ->
-    headerHeight = @header.height()
-    elementHeight = @height()
-    # TODO: fix hardcoded 20
-    @referencesTableDiv.height(elementHeight - headerHeight - 20)
+module.exports.HeaderView =
+class HeaderView extends View
+  @content: (params) ->
+      @tag 'header', outlet: 'header', =>
+        @h2 params.title, style: 'display: inline-block;'
+        @span class: 'icon icon-x pull-right', click: 'destroy'
+
+  destroy: ->
+    @parentView.destroy()
+
+module.exports.RtagsTreeView =
+class RtagsTreeView extends View
+  @content: ->
+    @div style: 'overflow: auto;', =>
+      @table class: 'rtags-references-table', outlet: 'referencesTable'
+
+  initialize: ->
+    @children = []
+
+  setItems: (items) ->
+    @children = []
+
+    for item in items
+      @children.push(item)
+
+    @redraw()
 
   redraw: =>
     @referencesTable.children().detach()
     for rtagsReference in @children
       for reference in rtagsReference.getNodes()
         @referencesTable.append(reference)
+
+module.exports.RtagsReferencesTreePane =
+class RtagsReferencesTreePane extends View
+  @content: ->
+    @div =>
+      @subview 'resizeHandle', new ResizeHandleView
+      @subview 'header', new HeaderView(title: "Rtags References")
+      @subview 'referencesTree', new RtagsTreeView
+
+  initialize: ->
+    @panel = null
+    @resizeHandle.setResizee(@referencesTree)
+    @referencesTree.height(200)
 
   destroy: ->
     @panel?.destroy()
