@@ -10,4 +10,5 @@ Uses [rtags](https://github.com/Andersbakken/rtags) to provide common IDE usage 
 * [Find virtuals](https://raw.githubusercontent.com/sphaerophoria/atom-rtags-plus/master/resources/find-virtuals.webm)
 * [Code completion](https://raw.githubusercontent.com/sphaerophoria/atom-rtags-plus/master/resources/code-completion.webm)
 * [Code Linting](https://raw.githubusercontent.com/sphaerophoria/atom-rtags-plus/master/resources/code-linting.png)
+* [Refactor](https://raw.githubusercontent.com/sphaerophoria/atom-rtags-plus/master/resources/refactor.webm)
 * And maybe more!
