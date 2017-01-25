@@ -80,10 +80,8 @@ class RtagsReferenceNode extends Node
         isFunction = false
 
       sigParts = sigParts[0].split(' ')
-      if sigParts.length > 1
-        keyView.text("#{sigParts[1]}")
-      else
-        keyView.text("#{sigParts[0]}")
+      sigString = sigParts[sigParts.length - 1]
+      keyView.text("#{sigString}")
 
       if isFunction
         keyView.text(keyView.text() + "()")
