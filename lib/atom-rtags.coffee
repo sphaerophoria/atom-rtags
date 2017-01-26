@@ -5,8 +5,8 @@
 {RtagsRefactorConfirmationNode, RtagsRefactorConfirmationPane} = require './view/refactor-confirmation-view'
 RtagsSearchView = require './view/rtags-search-view'
 RtagsCodeCompleter = require './code-completer.coffee'
+{RtagsLinter} = require './linter.coffee'
 rtags = require './rtags'
-fs = require 'fs'
 child_process = require 'child_process'
 
 matched_scope = (editor) ->
@@ -41,6 +41,7 @@ module.exports = AtomRtags =
     @referencesView = new RtagsReferencesTreePane
     @searchView = new RtagsSearchView
     @codeCompletionProvider = new RtagsCodeCompleter
+    @linter = new RtagsLinter
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -55,76 +56,16 @@ module.exports = AtomRtags =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:reindex-current-file': => @reindex_current_file()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:refactor-at-point': => @refactor_at_point()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:get-subclasses': => @get_subclasses()
-    @current_linter_messages = {}
 
   deactivate: ->
     @subscriptions?.dispose()
     @subscriptions = null
-    @diagnostics.kill()
+    @linter.destroy()
 
   # Toplevel function for linting. Provides a callback for every time rtags diagnostics outputs data
   # On new data we update the linter with our newly received results.
   consumeLinter: (indieRegistry) ->
-    enableCodeLinting = atom.config.get('atom-rtags-plus.codeLinting')
-
-    if !enableCodeLinting
-      return
-
-    mylinter = indieRegistry.register {name: "Rtags Linter"}
-    @subscriptions.add(mylinter)
-
-    current_linter_messages=@current_linter_messages
-    update_linter = (data) ->
-      # Parse data into linter strings
-      # Linter only updates one file at a time... so every time we set messages we have to aggregate all our previous linted files
-      res = []
-      for file in data?.checkstyle?.file
-        current_linter_messages[file.$.name] = []
-        for error in file.error
-          if error.$.severity != "skipped" and error.$.severity != "none"
-            start_point = [error.$.line - 1, error.$.column - 1]
-            end_point = [error.$.line - 1]
-            filePath = file.$.name
-
-            # This kind of sucks...
-            # * read the whole file into memory
-            # * count lines until we get to the given line
-            # * count forwards until we get to a non-identifying character
-            fileBuf = fs.readFileSync(filePath)
-            currentLine = 0
-            bufferPos = 0
-            errorLine = parseInt(error.$.line, 10)
-            while true
-              if fileBuf[bufferPos] == '\n'.charCodeAt(0)
-                currentLine++
-              if currentLine == errorLine - 1
-                break
-              bufferPos++
-
-            i = parseInt(error.$.column,10)
-            bufferPos += i
-            for c in fileBuf[bufferPos..]
-              if !/[a-zA-Z0-9_]/.test(String.fromCharCode(c))
-                console.log("found it")
-                end_point.push(i - 1)
-                break;
-              i++
-
-            current_linter_messages[filePath].push {
-              type: error.$.severity,
-              text: error.$.message,
-              filePath: filePath,
-              severity: error.$.severity,
-              range: [start_point , end_point]
-            }
-
-      for k,v of current_linter_messages
-        for error in v
-          res.push error
-
-      mylinter.setMessages(res)
-
-    @diagnostics = rtags.rc_diagnostics_start(update_linter)
+    @linter.registerLinter(indieRegistry)
 
   # This is our autocompletion function.
   provide: ->
@@ -136,6 +77,8 @@ module.exports = AtomRtags =
     return if not active_editor
     return if not matched_scope(active_editor)
     rtags.find_symbol_at_point(active_editor.getPath(), active_editor.getCursorBufferPosition()).then(([uri,r,c]) ->
+      if !uri
+        return
       atom.workspace.open uri, {'initialLine': r, 'initialColumn':c}
     , (error) -> atom.notifications.addError(error)
     )

@@ -164,7 +164,7 @@ module.exports =
 
         ret.push(item)
       ret
-      )
+    , (err) -> [])
 
   find_symbols_by_keyword: (keyword) ->
     if !keyword
