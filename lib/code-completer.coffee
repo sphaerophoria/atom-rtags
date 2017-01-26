@@ -101,6 +101,10 @@ convertCompletion = (completionLine) ->
   # Macros repeat their own names as their types... Gross!
   if type != macroDefStr
     item["leftLabel"] = getType(signature)
+  else
+    if item["snippet"].includes("(")
+      newType = "function"
+
 
   if newType
     item["type"] = newType
