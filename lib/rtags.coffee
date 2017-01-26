@@ -129,42 +129,6 @@ module.exports =
   # This is the calldown for autocompletion. Sticks our current buffer into stdin and then gets results out of rtags
   rc_get_completions: (fn, loc, current_content, prefix) ->
     promise = rc_exec ['--current-file='+fn, '-b', '--unsaved-file='+fn+':'+current_content.length, '--code-complete-at', fn_loc(fn, loc), '--synchronous-completions', '--code-complete-prefix='+prefix], current_content
-    promise.then((out) ->
-      ret = []
-      # TODO: This is terrible to read
-      for line in out.split "\n"
-        sig_args = line.split("(")
-        sig = sig_args[0]
-        args = sig_args[1]?.split(")")[0].split(",")
-        if args == undefined
-          args = []
-
-        if sig == ""
-          continue
-        segments = sig.split " "
-
-        snippet = ""
-        snippet += segments[1]
-        if args.length > 0
-          snippet += "("
-        i = 1
-        for arg in args
-          snippet += "${#{i}:#{arg}}"
-          i++
-          if (i <= args.length)
-            snippet+= ","
-
-        if args.length > 0
-          snippet += ")"
-
-        item = {"snippet": snippet}
-
-        if args.length > 0
-          item.type = 'function'
-
-        ret.push(item)
-      ret
-    , (err) -> [])
 
   find_symbols_by_keyword: (keyword) ->
     if !keyword
