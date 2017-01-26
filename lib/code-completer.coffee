@@ -12,17 +12,33 @@ createSnippetWithArgs = (completion, signature) ->
   sig_args = signature.split("(")
   sig = sig_args[0]
   args = sig_args[1]?.split(")")[0].split(",")
+  argPos = 1
+
+  templateArgs = sig.split(completion)[1]
+  if templateArgs
+    templateArgsIdx = templateArgs.indexOf("<")
+    if templateArgsIdx != -1
+      templateArgs = templateArgs[templateArgsIdx+1..]
+      templateArgsFinishIdx = templateArgs.lastIndexOf(">")
+      templateArgs = templateArgs[..templateArgsFinishIdx - 1]
+      templateArgs = templateArgs.split(",")
+      completion += '<'
+      for arg in templateArgs
+        completion += "${#{argPos}:#{arg}},"
+        argPos++
+      completion = completion[..completion.length-2]
+      completion += ">"
+
 
   if !args
     return completion
-  if args?.length == 0
+  if args.length == 0
     return completion
 
   completion += '('
-  i = 1
   for arg in args
-    completion += "${#{i}:#{arg}},"
-    i++
+    completion += "${#{argPos}:#{arg}},"
+    argPos++
   # Truncate last comma
   completion = completion[..completion?.length-2]
   completion += ')'
