@@ -1,10 +1,12 @@
 {CompositeDisposable, Notifictaion} = require 'atom'
+{$} = require 'space-pen'
 
 # {AtomRtagsReferencesModel, AtomRtagsReferencesView} = require './atom-rtags-references-view'
 {RtagsReferencesTreePane, RtagsReferenceNode} = require './view/references-tree-view'
 {RtagsRefactorConfirmationNode, RtagsRefactorConfirmationPane} = require './view/refactor-confirmation-view'
 RtagsSearchView = require './view/rtags-search-view'
 RtagsCodeCompleter = require './code-completer.coffee'
+RtagsTooltip = require './view/tooltip.coffee'
 {RtagsLinter} = require './linter.coffee'
 rtags = require './rtags'
 child_process = require 'child_process'
@@ -56,6 +58,7 @@ module.exports = AtomRtags =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:reindex-current-file': => @reindex_current_file()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:refactor-at-point': => @refactor_at_point()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:get-subclasses': => @get_subclasses()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:get-symbol-info': => @get_symbol_info()
 
   deactivate: ->
     @subscriptions?.dispose()
@@ -169,8 +172,18 @@ module.exports = AtomRtags =
       active_editor = atom.workspace.getActiveTextEditor()
       return if not active_editor
       return if not matched_scope(active_editor)
-      @location_stack_push()
       res = rtags.get_subclasses active_editor.getPath(), active_editor.getCursorBufferPosition()
-      console.log(res)
+    catch err
+      atom.notifications.addError err
+
+  get_symbol_info: ->
+    try
+      active_editor = atom.workspace.getActiveTextEditor()
+      return if not active_editor
+      return if not matched_scope(active_editor)
+      res = rtags.get_symbol_info active_editor.getPath(), active_editor.getCursorBufferPosition()
+      res.then( (out) ->
+        atom.notifications.addInfo(out.Type)
+      )
     catch err
       atom.notifications.addError err

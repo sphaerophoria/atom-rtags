@@ -195,3 +195,23 @@ module.exports =
       current.children.push(extract_object_from_class_hierarchy_line(line))
 
     hierarchy
+
+  get_symbol_info: (fn, loc) ->
+    promise = rc_exec ['-z', '-K', '-U', fn_loc(fn, loc)]
+    promise.then((out) ->
+      ret = {}
+      for line in out.split('\n')[1..]
+        splitIdx = line.indexOf(':')
+        k = line[0..splitIdx-1].trim()
+        v = line[splitIdx+1..].trim()
+        ret[k] = v
+
+      try
+        ret["ExtendedType"] = ret["Type"]
+        ret["Type"] = ret["Type"].split("=>")[0].trim()
+      catch
+        # Do nothing
+
+      console.log(ret)
+      ret
+    )
