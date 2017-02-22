@@ -135,18 +135,31 @@ class RtagsCodeCompleter
     if !enableCodeCompletion
       return
 
+    # This handles an edge case where spamming rtags with completion two times in a row (when typing ::) results in no completions
+    if prefix == ":"
+      return
+
+    # This should come *before* newCompletionLocation is set. That way the next character will be resolved as part of
+    # this set of completions
+    while prefix[0] == "." or prefix[0] == ":"
+      prefix = prefix[1..]
+
     newCompletionLocation = new Point
     newCompletionLocation.row = bufferPosition.row
     newCompletionLocation.column = bufferPosition.column - prefix.length
     bufferPosition.column -= 1
 
+    # Intentionally after newCompletionLocation has been set. We don't want adding this space affecting our results
+    # This is a fairly strange edge case. It looks like rtags doesn't like to give us results unless there's a space
+    # in some cases (after :: or ->). This seems to resolve the issue. I don't think there's much danger here as any
+    # "" prefix will be preceded by either whitespace or a special character which c/c++ should allow...
+    if prefix == ""
+      prefix = " "
+      bufferPosition.column += 1
+
     if prefix[0] != @initialPrefix
       @initialPrefix = prefix[0]
       @currentCompletionLocation = new Point
-
-    if prefix == "."
-      prefix = ""
-      bufferPosition.column += 1
 
     if @currentCompletionLocation != null and @currentCompletionLocation.compare(newCompletionLocation)
       editorText = editor.getText()
