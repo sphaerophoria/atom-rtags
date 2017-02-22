@@ -127,6 +127,7 @@ class RtagsCodeCompleter
     @currentCompletionLocation = null
     @baseCompletionsPromise = null
     @baseCompletions = []
+    @initialPrefix = ""
 
   # On input autocompletion calls this function
   getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix, activatedManually}) ->
@@ -157,15 +158,15 @@ class RtagsCodeCompleter
       prefix = " "
       bufferPosition.column += 1
 
-    if prefix[0] != @initialPrefix
-      @initialPrefix = prefix[0]
+    if prefix[0..@initialPrefix.length] != @initialPrefix
+      @initialPrefix = prefix
       @currentCompletionLocation = new Point
 
     if @currentCompletionLocation != null and @currentCompletionLocation.compare(newCompletionLocation)
       editorText = editor.getText()
       @currentCompletionLocation = newCompletionLocation
       # Asynchronously get results in a promise
-      @baseCompletionsPromise = rtags.rc_get_completions editor.getPath(), bufferPosition, editorText, prefix
+      @baseCompletionsPromise = rtags.rc_get_completions editor.getPath(), newCompletionLocation, editorText, prefix
       .then((out) ->
         ret = []
         # TODO: This is terrible to read
