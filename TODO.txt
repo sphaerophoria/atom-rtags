@@ -1,11 +1,3 @@
-[] Cleanup references view
-  [] handle not indexed case
-  [] properly handle no references found case in tree view
-  [] add ability to toggle pannel
-  [] Allow for multiple references views (tabs?)
-[] Make code completion use async call 
-[] Handle situation where rdm isn't started for code linting (maybe we should check every time we open a file...)
-[] Move reference to center of screen after jump
 [] Mouse based navigation
 [] Class hierarchy
   [] Refactor references view to be a view for arbitrary data

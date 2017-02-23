@@ -8,7 +8,10 @@ module.exports.RtagsLinter =
       @linter = null
       @diagnostics = null
       @current_linter_messages = {}
-      @updateLinterStatus(atom.config.get('atom-rtags-plus.codeLinting'))
+      if !@rcExecutor.rdmStarted
+        @rcExecutor.on('rdmStarted', @updateLinterStatus.bind(@, atom.config.get('atom-rtags-plus.codeLinting')))
+      else
+        @updateLinterStatus(atom.config.get('atom-rtags-plus.codeLinting'))
       atom.config.observe('atom-rtags-plus.codeLinting', (enable) => @updateLinterStatus(enable))
 
     destroy: ->
@@ -18,7 +21,7 @@ module.exports.RtagsLinter =
       @linter = indieRegistry.register {name: "Rtags Linter"}
 
     updateLinterStatus: (enable) ->
-      if enable
+      if enable and @rcExecutor.rdmStarted
         @startLinting()
       else
         @stopLinting()
@@ -31,7 +34,7 @@ module.exports.RtagsLinter =
       @diagnostics?.kill()
       @current_linter_messages = {}
       @diagnostics = null
-      @linter.setMessages([])
+      @linter?.setMessages([])
 
     updateLinter: (data) =>
       # Parse data into linter strings

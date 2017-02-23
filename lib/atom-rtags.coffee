@@ -1,5 +1,6 @@
 {CompositeDisposable, Notifictaion} = require 'atom'
 {$} = require 'space-pen'
+util = require './util'
 
 # {AtomRtagsReferencesModel, AtomRtagsReferencesView} = require './atom-rtags-references-view'
 {RtagsReferencesTreePane, RtagsReferenceNode} = require './view/references-tree-view'
@@ -12,9 +13,7 @@ RtagsTooltip = require './view/tooltip.coffee'
 child_process = require 'child_process'
 
 matched_scope = (editor) ->
-  for s in ['source.cpp', 'source.c', 'source.h', 'source.hpp']
-    return true if s in editor.getRootScopeDescriptor().scopes
-  return false
+  util.matched_scope(editor)
 
 module.exports = AtomRtags =
   config:
