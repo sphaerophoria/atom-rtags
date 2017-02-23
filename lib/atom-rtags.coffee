@@ -11,6 +11,7 @@ RtagsTooltip = require './view/tooltip.coffee'
 {RtagsLinter} = require './linter.coffee'
 {RcExecutor} = require './rtags'
 child_process = require 'child_process'
+{RtagsHyperclicker} = require './rtags-hyperclicker'
 
 matched_scope = (editor) ->
   util.matched_scope(editor)
@@ -44,6 +45,7 @@ module.exports = AtomRtags =
     @rcExecutor = new RcExecutor
     @codeCompletionProvider = new RtagsCodeCompleter(@rcExecutor)
     @linter = new RtagsLinter(@rcExecutor)
+    @hyperclickProvider = new RtagsHyperclicker(@rcExecutor)
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -59,12 +61,14 @@ module.exports = AtomRtags =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:refactor-at-point': => @refactor_at_point()
     #@subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:get-subclasses': => @get_subclasses()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:get-symbol-info': => @get_symbol_info()
+    #@subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:get-tokens': => @get_tokens()
 
   deactivate: ->
     @subscriptions?.dispose()
     @subscriptions = null
     @linter.destroy()
     @rcExecutor.destroy()
+    @hyperclickProvider.destroy()
 
   # Toplevel function for linting. Provides a callback for every time rtags diagnostics outputs data
   # On new data we update the linter with our newly received results.
@@ -72,8 +76,11 @@ module.exports = AtomRtags =
     @linter.registerLinter(indieRegistry)
 
   # This is our autocompletion function.
-  provide: ->
+  getCompletionProvider: ->
     @codeCompletionProvider
+
+  getHyperclickProvider: ->
+    @hyperclickProvider.getProvider()
 
 
   find_symbol_at_point: ->
@@ -188,3 +195,11 @@ module.exports = AtomRtags =
       )
     catch err
       atom.notifications.addError err
+
+  get_tokens: ->
+    active_editor = atom.workspace.getActiveTextEditor()
+    return if not active_editor
+    return if not matched_scope(active_editor)
+    @rcExecutor.get_tokens(active_editor.getPath()).then((out) =>
+      console.log(out)
+    , (err) -> atom.notifications.addError(err))

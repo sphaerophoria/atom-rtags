@@ -17,7 +17,8 @@
     "atom-package-deps": "latest"
   },
   "package-deps": [
-    "linter"
+    "linter",
+    "hyperclick"
   ],
   "consumedServices": {
     "linter-indie": {
@@ -29,7 +30,12 @@
   "providedServices": {
     "autocomplete.provider": {
       "versions": {
-        "2.0.0": "provide"
+        "2.0.0": "getCompletionProvider"
+      }
+    },
+    "hyperclick.provider": {
+      "versions": {
+        "0.0.0": "getHyperclickProvider"
       }
     }
   }

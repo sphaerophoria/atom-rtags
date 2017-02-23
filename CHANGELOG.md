@@ -1,3 +1,7 @@
-## 0.1.0 - First Release
-* Every feature added
-* Every bug fixed
+# 1.3.0
+* Responsiveness improvements
+* Code completion improvements
+* Mouse based navigation
+* Initialization fixes
+    * Linter starts when rdm is started
+    * rdm/linter only start when c/c++ file is opened
