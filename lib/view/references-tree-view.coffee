@@ -167,7 +167,7 @@ class RtagsTreeView extends View
     @redraw()
 
   redraw: =>
-    @referencesTable.children().detach()
+    @referencesTable.children().remove()
     for rtagsReference in @children
       for reference in rtagsReference.getNodes()
         @referencesTable.append(reference)

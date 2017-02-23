@@ -159,8 +159,8 @@ module.exports = AtomRtags =
     if res.matchCount == 1
       for uri, v of res.res
         atom.workspace.open uri, {'initialLine': v[0], 'initialColumn':v[1]}
-    #atom.workspace.addBottomPanel({item: @referencesView})
     references = []
+    @referencesView.referencesTree.setItems([])
     for path, refArray of res.res
       for ref in refArray
         references.push(new RtagsReferenceNode({ref: ref, path:path, rcExecutor: @rcExecutor}, 0, @referencesView.referencesTree.redraw))
