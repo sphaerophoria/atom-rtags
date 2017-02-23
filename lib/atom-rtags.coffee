@@ -8,7 +8,7 @@ RtagsSearchView = require './view/rtags-search-view'
 RtagsCodeCompleter = require './code-completer.coffee'
 RtagsTooltip = require './view/tooltip.coffee'
 {RtagsLinter} = require './linter.coffee'
-rtags = require './rtags'
+{RcExecutor} = require './rtags'
 child_process = require 'child_process'
 
 matched_scope = (editor) ->
@@ -42,8 +42,9 @@ module.exports = AtomRtags =
 
     @referencesView = new RtagsReferencesTreePane
     @searchView = new RtagsSearchView
-    @codeCompletionProvider = new RtagsCodeCompleter
-    @linter = new RtagsLinter
+    @rcExecutor = new RcExecutor
+    @codeCompletionProvider = new RtagsCodeCompleter(@rcExecutor)
+    @linter = new RtagsLinter(@rcExecutor)
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -64,6 +65,7 @@ module.exports = AtomRtags =
     @subscriptions?.dispose()
     @subscriptions = null
     @linter.destroy()
+    @rcExecutor.destroy()
 
   # Toplevel function for linting. Provides a callback for every time rtags diagnostics outputs data
   # On new data we update the linter with our newly received results.
@@ -79,7 +81,7 @@ module.exports = AtomRtags =
     active_editor = atom.workspace.getActiveTextEditor()
     return if not active_editor
     return if not matched_scope(active_editor)
-    rtags.find_symbol_at_point(active_editor.getPath(), active_editor.getCursorBufferPosition()).then(([uri,r,c]) ->
+    @rcExecutor.find_symbol_at_point(active_editor.getPath(), active_editor.getCursorBufferPosition()).then(([uri,r,c]) ->
       if !uri
         return
       atom.workspace.open uri, {'initialLine': r, 'initialColumn':c}
@@ -90,7 +92,7 @@ module.exports = AtomRtags =
     active_editor = atom.workspace.getActiveTextEditor()
     return if not active_editor
     return if not matched_scope(active_editor)
-    promise = rtags.find_references_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
+    promise = @rcExecutor.find_references_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
     promise.then((out) =>
       @display_results_in_references(out)
     , (error) -> atom.notifications.addError(error))
@@ -99,7 +101,7 @@ module.exports = AtomRtags =
     active_editor = atom.workspace.getActiveTextEditor()
     return if not active_editor
     return if not matched_scope(active_editor)
-    rtags.find_all_references_at_point(active_editor.getPath(), active_editor.getCursorBufferPosition())
+    @rcExecutor.find_all_references_at_point(active_editor.getPath(), active_editor.getCursorBufferPosition())
     .then((out) =>
       @display_results_in_references(out)
     , (err) -> atom.notifications.addError(err))
@@ -108,13 +110,13 @@ module.exports = AtomRtags =
     active_editor = atom.workspace.getActiveTextEditor()
     return if not active_editor
     return if not matched_scope(active_editor)
-    rtags.find_virtuals_at_point(active_editor.getPath(), active_editor.getCursorBufferPosition()).then((out) =>
+    @rcExecutor.find_virtuals_at_point(active_editor.getPath(), active_editor.getCursorBufferPosition()).then((out) =>
       @display_results_in_references(out)
     , (err) -> atom.notifications.addError(err))
 
   find_symbols_by_keyword: ->
     findSymbolCallback = (query) =>
-      rtags.find_symbols_by_keyword(query).then((out) =>
+      @rcExecutor.find_symbols_by_keyword(query).then((out) =>
         @display_results_in_references(out)
       , (err) -> atom.notifications.addError(err))
 
@@ -123,7 +125,7 @@ module.exports = AtomRtags =
 
   find_references_by_keyword: ->
     findReferencesCallback = (query) =>
-      rtags.find_references_by_keyword(query).then((out) =>
+      @rcExecutor.find_references_by_keyword(query).then((out) =>
         @display_results_in_references(out)
       , (err) -> atom.notifications.addError(err))
 
@@ -134,14 +136,14 @@ module.exports = AtomRtags =
     active_editor = atom.workspace.getActiveTextEditor()
     return if not active_editor
     return if not matched_scope(active_editor)
-    rtags.reindex_current_file(active_editor.getPath())
+    @rcExecutor.reindex_current_file(active_editor.getPath())
 
   refactor_at_point: ->
     active_editor = atom.workspace.getActiveTextEditor()
     return if not active_editor
     return if not matched_scope(active_editor)
     refactorCallback = (replacement) =>
-      rtags.get_refactor_locations(active_editor.getPath(), active_editor.getCursorBufferPosition())
+      @rcExecutor.get_refactor_locations(active_editor.getPath(), active_editor.getCursorBufferPosition())
       .then((paths) ->
         items = []
         confirmationPane = new RtagsRefactorConfirmationPane
@@ -172,7 +174,7 @@ module.exports = AtomRtags =
       active_editor = atom.workspace.getActiveTextEditor()
       return if not active_editor
       return if not matched_scope(active_editor)
-      res = rtags.get_subclasses active_editor.getPath(), active_editor.getCursorBufferPosition()
+      res = @rcExecutor.get_subclasses active_editor.getPath(), active_editor.getCursorBufferPosition()
     catch err
       atom.notifications.addError err
 
@@ -181,7 +183,7 @@ module.exports = AtomRtags =
       active_editor = atom.workspace.getActiveTextEditor()
       return if not active_editor
       return if not matched_scope(active_editor)
-      res = rtags.get_symbol_info active_editor.getPath(), active_editor.getCursorBufferPosition()
+      res = @rcExecutor.get_symbol_info active_editor.getPath(), active_editor.getCursorBufferPosition()
       res.then( (out) ->
         atom.notifications.addInfo(out.Type)
       )

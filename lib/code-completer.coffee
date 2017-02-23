@@ -1,5 +1,4 @@
 {Point} = require 'atom'
-rtags = require './rtags'
 
 getType = (signature) ->
   ret = signature.split("(")[0]
@@ -122,11 +121,10 @@ class RtagsCodeCompleter
   excludeLowerPriority: true
   suggestionPriority: 1
 
-  constructor: ->
+  constructor: (rcExecutor) ->
+    @rcExecutor = rcExecutor
     @currentCompletionLocation = new Point
-    @currentCompletionLocation = null
     @baseCompletionsPromise = null
-    @baseCompletions = []
     @initialPrefix = ""
 
   # On input autocompletion calls this function
@@ -148,25 +146,24 @@ class RtagsCodeCompleter
     newCompletionLocation = new Point
     newCompletionLocation.row = bufferPosition.row
     newCompletionLocation.column = bufferPosition.column - prefix.length
-    bufferPosition.column -= 1
 
-    # Intentionally after newCompletionLocation has been set. We don't want adding this space affecting our results
-    # This is a fairly strange edge case. It looks like rtags doesn't like to give us results unless there's a space
-    # in some cases (after :: or ->). This seems to resolve the issue. I don't think there's much danger here as any
-    # "" prefix will be preceded by either whitespace or a special character which c/c++ should allow...
-    if prefix == ""
-      prefix = " "
-      bufferPosition.column += 1
-
-    if prefix[0..@initialPrefix.length] != @initialPrefix
-      @initialPrefix = prefix
+    if prefix[0..@initialPrefix.length - 1] != @initialPrefix and @initialPrefix != ""
       @currentCompletionLocation = new Point
 
-    if @currentCompletionLocation != null and @currentCompletionLocation.compare(newCompletionLocation)
+    if @currentCompletionLocation.compare(newCompletionLocation)
+      @initialPrefix = prefix;
+
+      # This is a fairly strange edge case. It looks like rtags doesn't like to give us results unless there's a space
+      # in some cases (after :: or ->). This seems to resolve the issue. I don't think there's much danger here as any
+      # "" prefix will be preceded by either whitespace or a special character which c/c++ should allow...
+      if prefix == ""
+        prefix = " "
+        bufferPosition.column += 1
+
       editorText = editor.getText()
       @currentCompletionLocation = newCompletionLocation
       # Asynchronously get results in a promise
-      @baseCompletionsPromise = rtags.rc_get_completions editor.getPath(), newCompletionLocation, editorText, prefix
+      @baseCompletionsPromise = @rcExecutor.rc_get_completions editor.getPath(), newCompletionLocation, editorText, prefix
       .then((out) ->
         ret = []
         # TODO: This is terrible to read
@@ -174,18 +171,14 @@ class RtagsCodeCompleter
           completion = convertCompletion(line)
           if completion
             ret.push(completion)
-        @baseCompletions = ret
-        @baseCompletions
+        ret
       , (err) -> [])
 
-      @baseCompletionsPromise.then((data) ->
-        @baseCompletions = data
-        @baseCompletions)
       return @baseCompletionsPromise
     else
-      return @baseCompletionsPromise.then(() ->
+      return @baseCompletionsPromise.then((completions) ->
         ret = []
-        for completion in @baseCompletions
+        for completion in completions
           if completion.snippet and completion.snippet[0..prefix.length - 1] == prefix
             completion.replacementPrefix = prefix
             ret.push(completion)

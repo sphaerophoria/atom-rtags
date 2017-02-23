@@ -1,9 +1,9 @@
 {TextBuffer} = require 'atom'
-rtags = require './rtags'
 
 module.exports.RtagsLinter =
   class RtagsLinter
-    constructor: ->
+    constructor: (rcExecutor) ->
+      @rcExecutor = rcExecutor
       @enableCodeLinting = atom.config.get('atom-rtags-plus.codeLinting')
       @linter = null
       @diagnostics = null
@@ -25,7 +25,7 @@ module.exports.RtagsLinter =
 
     startLinting: ->
       if !@diagnostics
-        @diagnostics = rtags.rc_diagnostics_start(@updateLinter)
+        @diagnostics = @rcExecutor.rc_diagnostics_start(@updateLinter)
 
     stopLinting: ->
       @diagnostics?.kill()
