@@ -97,13 +97,13 @@ class RtagsReferenceNode extends Node
     [keyView, spacer, contentView]
 
   retrieveChildren: ->
-    references = rtags.find_references_at_point(@caller.filename, @caller.location)
+    references = @data.rcExecutor.find_references_at_point(@caller.filename, @caller.location)
 
     references.then((references) =>
         ret = []
         for path, refArray of references.res
             for ref in refArray
-                ref = new RtagsReferenceNode({ref: ref, path: path}, @indentLevel + 1, @redrawCallback)
+                ref = new RtagsReferenceNode({ref: ref, path: path, rcExecutor: @data.rcExecutor}, @indentLevel + 1, @redrawCallback)
                 ret.push(ref)
         ret)
 

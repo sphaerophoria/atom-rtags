@@ -164,7 +164,7 @@ module.exports = AtomRtags =
     references = []
     for path, refArray of res.res
       for ref in refArray
-        references.push(new RtagsReferenceNode({ref: ref, path:path}, 0, @referencesView.referencesTree.redraw))
+        references.push(new RtagsReferenceNode({ref: ref, path:path, rcExecutor: @rcExecutor}, 0, @referencesView.referencesTree.redraw))
 
     @referencesView.show()
     @referencesView.referencesTree.setItems(references)
