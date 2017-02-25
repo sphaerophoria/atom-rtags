@@ -12,4 +12,5 @@ Uses [rtags](https://github.com/Andersbakken/rtags) to provide common IDE usage 
 * [Code completion](https://raw.githubusercontent.com/sphaerophoria/atom-rtags-plus/master/resources/code-completion.webm)
 * [Code Linting](https://raw.githubusercontent.com/sphaerophoria/atom-rtags-plus/master/resources/code-linting.png)
 * [Refactor](https://raw.githubusercontent.com/sphaerophoria/atom-rtags-plus/master/resources/refactor.webm)
+* [Type Info](https://raw.githubusercontent.com/sphaerophoria/atom-rtags-plus/master/resources/symbol-info.webm)
 * And maybe more!
