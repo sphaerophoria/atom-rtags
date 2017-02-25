@@ -1,4 +1,0 @@
-[] Mouse based navigation
-[] Class hierarchy
-  [] Refactor references view to be a view for arbitrary data
-  [] Plug in class hierarchy

@@ -8,9 +8,8 @@ module.exports.RtagsLinter =
       @linter = null
       @diagnostics = null
       @current_linter_messages = {}
-      if !@rcExecutor.rdmStarted
-        @rcExecutor.on('rdmStarted', @updateLinterStatus.bind(@, atom.config.get('atom-rtags-plus.codeLinting')))
-      else
+      @rcExecutor.on('rdmStarted', @updateLinterStatus.bind(@, atom.config.get('atom-rtags-plus.codeLinting')))
+      if @rcExecutor.rdmStarted
         @updateLinterStatus(atom.config.get('atom-rtags-plus.codeLinting'))
       atom.config.observe('atom-rtags-plus.codeLinting', (enable) => @updateLinterStatus(enable))
 
@@ -27,7 +26,7 @@ module.exports.RtagsLinter =
         @stopLinting()
 
     startLinting: ->
-      if !@diagnostics
+      if !@diagnostics?.connected
         @diagnostics = @rcExecutor.rc_diagnostics_start(@updateLinter)
 
     stopLinting: ->
