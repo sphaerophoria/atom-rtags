@@ -90,9 +90,8 @@ module.exports = AtomRtags =
     @rcExecutor.find_symbol_at_point(active_editor.getPath(), active_editor.getCursorBufferPosition()).then(([uri,r,c]) ->
       if !uri
         return
-      atom.workspace.open uri, {'initialLine': r, 'initialColumn':c}
-    , (error) -> atom.notifications.addError(error)
-    )
+      atom.workspace.open uri, {'initialLine': r, 'initialColumn':c})
+    .catch( (error) -> atom.notifications.addError(error))
 
   find_references_at_point: ->
     active_editor = atom.workspace.getActiveTextEditor()
@@ -100,8 +99,8 @@ module.exports = AtomRtags =
     return if not matched_scope(active_editor)
     promise = @rcExecutor.find_references_at_point active_editor.getPath(), active_editor.getCursorBufferPosition()
     promise.then((out) =>
-      @display_results_in_references(out)
-    , (error) -> atom.notifications.addError(error))
+      @display_results_in_references(out))
+    .catch((error) -> atom.notifications.addError(error))
 
   find_all_references_at_point: ->
     active_editor = atom.workspace.getActiveTextEditor()
@@ -109,22 +108,22 @@ module.exports = AtomRtags =
     return if not matched_scope(active_editor)
     @rcExecutor.find_all_references_at_point(active_editor.getPath(), active_editor.getCursorBufferPosition())
     .then((out) =>
-      @display_results_in_references(out)
-    , (err) -> atom.notifications.addError(err))
+      @display_results_in_references(out))
+    .catch((err) -> atom.notifications.addError(err))
 
   find_virtuals_at_point: ->
     active_editor = atom.workspace.getActiveTextEditor()
     return if not active_editor
     return if not matched_scope(active_editor)
     @rcExecutor.find_virtuals_at_point(active_editor.getPath(), active_editor.getCursorBufferPosition()).then((out) =>
-      @display_results_in_references(out)
-    , (err) -> atom.notifications.addError(err))
+      @display_results_in_references(out))
+    .catch((err) -> atom.notifications.addError(err))
 
   find_symbols_by_keyword: ->
     findSymbolCallback = (query) =>
       @rcExecutor.find_symbols_by_keyword(query).then((out) =>
-        @display_results_in_references(out)
-      , (err) -> atom.notifications.addError(err))
+        @display_results_in_references(out))
+      .catch((err) -> atom.notifications.addError(err))
 
     @searchView.setTitle("Find symbols by keyword")
     @searchView.setSearchCallback(findSymbolCallback)
@@ -133,8 +132,8 @@ module.exports = AtomRtags =
   find_references_by_keyword: ->
     findReferencesCallback = (query) =>
       @rcExecutor.find_references_by_keyword(query).then((out) =>
-        @display_results_in_references(out)
-      , (err) -> atom.notifications.addError(err))
+        @display_results_in_references(out))
+      .catch((err) -> atom.notifications.addError(err))
 
     @searchView.setTitle("Find references by keyword")
     @searchView.setSearchCallback(findReferencesCallback)
@@ -145,6 +144,7 @@ module.exports = AtomRtags =
     return if not active_editor
     return if not matched_scope(active_editor)
     @rcExecutor.reindex_current_file(active_editor.getPath())
+    .catch((err) -> atom.notifications.addError(err))
 
   refactor_at_point: ->
     active_editor = atom.workspace.getActiveTextEditor()
@@ -160,6 +160,7 @@ module.exports = AtomRtags =
         confirmationPane.show()
         confirmationPane.referencesTree.setItems(items)
         )
+      .catch((err) -> atom.notifications.addError(err))
 
     @searchView.setTitle("Rename item")
     @searchView.setSearchCallback(refactorCallback)
@@ -179,30 +180,26 @@ module.exports = AtomRtags =
     @referencesView.referencesTree.setItems(references)
 
   get_subclasses: ->
-    try
-      active_editor = atom.workspace.getActiveTextEditor()
-      return if not active_editor
-      return if not matched_scope(active_editor)
-      res = @rcExecutor.get_subclasses active_editor.getPath(), active_editor.getCursorBufferPosition()
-    catch err
-      atom.notifications.addError err
+    active_editor = atom.workspace.getActiveTextEditor()
+    return if not active_editor
+    return if not matched_scope(active_editor)
+    res = @rcExecutor.get_subclasses active_editor.getPath(), active_editor.getCursorBufferPosition()
+    .catch((err) => atom.notifications.addError(err))
 
   get_symbol_info: ->
-    try
-      active_editor = atom.workspace.getActiveTextEditor()
-      return if not active_editor
-      return if not matched_scope(active_editor)
-      res = @rcExecutor.get_symbol_info active_editor.getPath(), active_editor.getCursorBufferPosition()
-      res.then( (out) ->
-        atom.notifications.addInfo("Type of #{out.SymbolName}:", {detail: out.Type})
-      )
-    catch err
-      atom.notifications.addError err
+    active_editor = atom.workspace.getActiveTextEditor()
+    return if not active_editor
+    return if not matched_scope(active_editor)
+    res = @rcExecutor.get_symbol_info active_editor.getPath(), active_editor.getCursorBufferPosition()
+    res.then( (out) ->
+      atom.notifications.addInfo("Type of #{out.SymbolName}:", {detail: out.Type})
+    )
+    .catch( (err) -> atom.notifications.addError(err))
 
   get_tokens: ->
     active_editor = atom.workspace.getActiveTextEditor()
     return if not active_editor
     return if not matched_scope(active_editor)
     @rcExecutor.get_tokens(active_editor.getPath()).then((out) =>
-      console.log(out)
-    , (err) -> atom.notifications.addError(err))
+      console.log(out))
+    .catch((err) -> atom.notifications.addError(err))
