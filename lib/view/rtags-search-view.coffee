@@ -4,13 +4,18 @@ rtags = require '../rtags'
 module.exports =
   class RtagsSearchView extends View
     @content: ->
-      @form =>
-        @input class: 'input-text native-key-bindings', type: 'text', outlet: 'textbox'
+      @div =>
+        @h4 outlet: 'title'
+        @form =>
+          @input class: 'input-text native-key-bindings', type: 'text', outlet: 'textbox'
 
     initialize: () ->
       @panel = null
       @searchCallback = null
       @lastFocusedElement = null
+
+    setTitle: (title) ->
+      @title.text(title)
 
     setSearchCallback: (callback) ->
       @searchCallback = callback
@@ -21,7 +26,6 @@ module.exports =
       @panel = atom.workspace.addModalPanel({item: @})
       @textbox.focus()
       @textbox.keydown(@handleKeydown)
-
 
     hide: ->
       @panel?.destroy()

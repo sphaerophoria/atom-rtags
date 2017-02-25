@@ -126,6 +126,7 @@ module.exports = AtomRtags =
         @display_results_in_references(out)
       , (err) -> atom.notifications.addError(err))
 
+    @searchView.setTitle("Find symbols by keyword")
     @searchView.setSearchCallback(findSymbolCallback)
     @searchView.show()
 
@@ -135,6 +136,7 @@ module.exports = AtomRtags =
         @display_results_in_references(out)
       , (err) -> atom.notifications.addError(err))
 
+    @searchView.setTitle("Find references by keyword")
     @searchView.setSearchCallback(findReferencesCallback)
     @searchView.show()
 
@@ -159,6 +161,7 @@ module.exports = AtomRtags =
         confirmationPane.referencesTree.setItems(items)
         )
 
+    @searchView.setTitle("Rename item")
     @searchView.setSearchCallback(refactorCallback)
     @searchView.show()
 
