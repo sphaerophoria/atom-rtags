@@ -13,6 +13,7 @@ module.exports.Node =
         @data = data
         @redrawCallback = redrawCallback
         @indentLevel = indentLevel
+        @expanded = false
 
         @children = []
 
@@ -22,19 +23,31 @@ module.exports.Node =
         view = @getView()
         @nodeTd.append(view[0])
         @.append(view[1..])
+        @redrawCallback()
+
+      applyClickHandlers: () ->
+        @.unbind('click', @onClick)
+        @expander.unbind('click', @expand)
+        @expander.unbind('click', @fold)
+
         @.on('click', ' *', @onClick)
         @nodeTd.unbind('click', @onClick)
-        @expander.click(@expand)
-        @redrawCallback()
+        if (@expanded)
+          @expander.click(@fold)
+        else
+          @expander.click(@expand)
+
 
       getNodes: ->
         ret = []
         ret.push.apply(ret, @)
+        @applyClickHandlers()
         for child in @children
           ret.push.apply(ret, child.getNodes())
         ret
 
       expand: (e) =>
+        @expanded = true;
         @expander.unbind('click', @expand)
         @expander.click(@fold)
         @expander.removeClass('icon-chevron-right')
@@ -45,6 +58,7 @@ module.exports.Node =
         e.stopPropagation()
 
       fold: (e) =>
+        @expanded = false
         @expander.unbind('click', @fold)
         @expander.click(@expand)
         @expander.removeClass('icon-chevron-down')
