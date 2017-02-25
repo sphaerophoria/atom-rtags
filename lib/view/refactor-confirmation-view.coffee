@@ -26,7 +26,6 @@ module.exports.RtagsRefactorConfirmationNode =
 
     retrieveChildren: ->
       new Promise((resolve) =>
-        console.log(@data.refactorLines)
         resolve(@data.refactorLines)
         )
 

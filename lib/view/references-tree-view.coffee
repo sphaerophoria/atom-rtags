@@ -122,7 +122,6 @@ class RtagsReferenceNode extends Node
         ret)
 
   onClick: =>
-    console.log(@line, @column)
     atom.workspace.open(@data.path, {'initialLine': @line, 'initialColumn': @column})
 
 module.exports.ResizeHandleView =
