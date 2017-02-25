@@ -191,7 +191,7 @@ module.exports = AtomRtags =
       return if not matched_scope(active_editor)
       res = @rcExecutor.get_symbol_info active_editor.getPath(), active_editor.getCursorBufferPosition()
       res.then( (out) ->
-        atom.notifications.addInfo(out.Type)
+        atom.notifications.addInfo("Type of #{out.SymbolName}:", {detail: out.Type})
       )
     catch err
       atom.notifications.addError err
