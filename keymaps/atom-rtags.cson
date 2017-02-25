@@ -7,8 +7,29 @@
 
 # For more detailed documentation see
 # https://atom.io/docs/latest/behind-atom-keymaps-in-depth
-'atom-workspace':
-  'ctrl-\'': 'atom-rtags-plus:find-symbol-at-point'
-  'ctrl-"': 'atom-rtags-plus:find-references-at-point'
-  'ctrl-{': 'atom-rtags-plus:location-stack-back'
-  'ctrl-}': 'atom-rtags-plus:location-stack-forward'
+'atom-workspace.atom-rtags-plus-eclipse atom-text-editor':
+  'f3': 'atom-rtags-plus:find-symbol-at-point'
+  'ctrl-alt-h': 'atom-rtags-plus:find-references-at-point'
+  'ctrl-t': 'atom-rtags-plus:find-virtuals-at-point'
+  'alt-shift-r': 'atom-rtags-plus:refactor-at-point'
+  'ctrl-shift-space': 'atom-rtags-plus:get-symbol-info'
+  'ctrl-h': 'atom-rtags-plus:find-symbols-by-keyword'
+
+'atom-workspace.atom-rtags-plus-qtcreator atom-text-editor':
+  'f2': 'atom-rtags-plus:find-symbol-at-point'
+  'ctrl-shift-u': 'atom-rtags-plus:find-references-at-point'
+  'ctrl-shift-r': 'atom-rtags-plus:refactor-at-point'
+  'ctrl-shift-v': 'atom-rtags-plus:find-virtuals-at-point'
+  'ctrl-k': 'atom-rtags-plus:find-symbols-by-keyword'
+  'ctrl-shift-t': 'atom-rtags-plus:find-virtuals-at-point'
+  'ctrl-shift-i': 'atom-rtags-plus:get-symbol-info'
+
+'atom-workspace.atom-rtags-plus-vim atom-text-editor.vim-mode-plus.normal-mode, atom-workspace.atom-rtags-plus-vim atom-text-editor.vim-mode.normal-mode':
+  'space r .': 'atom-rtags-plus:find-symbol-at-point'
+  'space r ,': 'atom-rtags-plus:find-references-at-point'
+  'space r v': 'atom-rtags-plus:find-virtuals-at-point'
+  'space r >': 'atom-rtags-plus:find-symbols-by-keyword'
+  'space r <': 'atom-rtags-plus:find-references-by-keyword'
+  'space r R': 'atom-rtags-plus:refactor-at-point'
+  'space r V': 'atom-rtags-plus:reindex-current-file'
+  'space r i': 'atom-rtags-plus:get-symbol-info'

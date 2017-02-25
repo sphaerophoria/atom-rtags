@@ -5,4 +5,5 @@
 * Initialization fixes
     * Linter starts when rdm is started
     * rdm/linter only start when c/c++ file is opened
+* Keybindings change
 * Add title to modal panels

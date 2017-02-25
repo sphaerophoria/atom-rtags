@@ -16,6 +16,15 @@ child_process = require 'child_process'
 matched_scope = (editor) ->
   util.matched_scope(editor)
 
+update_keybinding_mode = (value) ->
+  $('.workspace').removeClass('atom-rtags-plus-eclipse')
+  $('.workspace').removeClass('atom-rtags-plus-qtcreator')
+  switch value
+    when 0 then $('.workspace').addClass('atom-rtags-plus-eclipse')
+    when 1 then $('.workspace').addClass('atom-rtags-plus-qtcreator')
+    when 2 then $('.workspace').addClass('atom-rtags-plus-vim')
+
+
 module.exports = AtomRtags =
   config:
     rcCommand:
@@ -33,6 +42,16 @@ module.exports = AtomRtags =
       type: 'boolean'
       default: 'true'
       description: 'Enable to show compile errors (restart atom to apply)'
+    keybindingStyle:
+      type: 'integer'
+      description: "Keybinding style"
+      default: 3
+      enum: [
+        {value: 0, description: 'Eclipse style keymap'}
+        {value: 1, description: 'QT Creator style keymap'}
+        {value: 2, description: 'Vim style keymap'}
+        {value: 3, description: 'Define your own'}
+      ]
 
   subscriptions: null
 
@@ -62,6 +81,9 @@ module.exports = AtomRtags =
     #@subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:get-subclasses': => @get_subclasses()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:get-symbol-info': => @get_symbol_info()
     #@subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:get-tokens': => @get_tokens()
+
+    update_keybinding_mode(atom.config.get('atom-rtags-plus.keybindingStyle'));
+    atom.config.observe('atom-rtags-plus.keybindingStyle', (value) => update_keybinding_mode(value))
 
   deactivate: ->
     @subscriptions?.dispose()
