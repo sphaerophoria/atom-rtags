@@ -1,5 +1,6 @@
-{Point} = require 'atom'
-{filter} = require 'fuzzaldrin-plus'
+lazyreq = require('lazy-req').proxy(require)
+n_atom = lazyreq('atom')
+n_fuzzaldrin = lazyreq('fuzzaldrin-plus')
 
 getType = (signature) ->
   ret = signature.split("(")[0]
@@ -122,12 +123,15 @@ class RtagsCodeCompleter
   excludeLowerPriority: true
   suggestionPriority: 1
 
-  constructor: (rcExecutor, doFuzzyCompletion) ->
-    @rcExecutor = rcExecutor
-    @currentCompletionLocation = new Point
+  constructor: () ->
+    @rcExecutor = null
+    @currentCompletionLocation = null
     @baseCompletionsPromise = null
     @initialPrefix = ""
-    @doFuzzyCompletion = doFuzzyCompletion
+    @doFuzzyCompletion = false;
+
+  setRcExecutor: (rcExecutor) ->
+    @rcExecutor = rcExecutor
 
   # On input autocompletion calls this function
   getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix, activatedManually}) ->
@@ -145,15 +149,15 @@ class RtagsCodeCompleter
     while prefix[0] == "." or prefix[0] == ":"
       prefix = prefix[1..]
 
-    newCompletionLocation = new Point
+    newCompletionLocation = new n_atom.Point
     newCompletionLocation.row = bufferPosition.row
     newCompletionLocation.column = bufferPosition.column - prefix.length
 
     savedPrefix = prefix
     prefix = ""
 
-    if prefix[0..@initialPrefix.length - 1] != @initialPrefix and @initialPrefix != ""
-      @currentCompletionLocation = new Point
+    if (prefix[0..@initialPrefix.length - 1] != @initialPrefix and @initialPrefix != "") or !@currentcompletionLocation
+      @currentCompletionLocation = new n_atom.Point
 
     if @currentCompletionLocation.compare(newCompletionLocation)
       @initialPrefix = prefix;
@@ -184,7 +188,7 @@ class RtagsCodeCompleter
         return completions;
       ret = []
       if @doFuzzyCompletion
-        ret = filter(completions, savedPrefix, key: 'snippet')
+        ret = n_fuzzaldrin.filter(completions, savedPrefix, key: 'snippet')
       else
         for completion in completions
           if completion.snippet and completion.snippet[0..savedPrefix.length - 1] == savedPrefix

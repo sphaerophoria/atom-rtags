@@ -1,7 +1,7 @@
 {$, View} = require 'space-pen'
 rtags = require '../rtags'
 
-module.exports =
+module.exports.RtagsSearchView =
   class RtagsSearchView extends View
     @content: ->
       @div =>

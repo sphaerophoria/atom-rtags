@@ -26,7 +26,7 @@ module.exports.RtagsLinter =
         @stopLinting()
 
     startLinting: ->
-      if !@diagnostics?.connected
+      if !@diagnostics or (@diagnostics.exitCode != null)
         @diagnostics = @rcExecutor.rc_diagnostics_start(@updateLinter)
 
     stopLinting: ->
