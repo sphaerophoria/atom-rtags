@@ -12,6 +12,7 @@ RtagsTooltip = require './view/tooltip.coffee'
 {RcExecutor} = require './rtags'
 child_process = require 'child_process'
 {RtagsHyperclicker} = require './rtags-hyperclicker'
+{OpenFileTracker} = require('./open-file-tracker')
 
 matched_scope = (editor) ->
   util.matched_scope(editor)
@@ -65,6 +66,7 @@ module.exports = AtomRtags =
     @codeCompletionProvider = new RtagsCodeCompleter(@rcExecutor)
     @linter = new RtagsLinter(@rcExecutor)
     @hyperclickProvider = new RtagsHyperclicker(@rcExecutor)
+    @openFileTracker = new OpenFileTracker(@rcExecutor)
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -91,6 +93,7 @@ module.exports = AtomRtags =
     @linter.destroy()
     @rcExecutor.destroy()
     @hyperclickProvider.destroy()
+    @openFileTracker.destroy()
 
   # Toplevel function for linting. Provides a callback for every time rtags diagnostics outputs data
   # On new data we update the linter with our newly received results.
