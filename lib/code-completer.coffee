@@ -1,4 +1,5 @@
 {Point} = require 'atom'
+{filter} = require 'fuzzaldrin-plus'
 
 getType = (signature) ->
   ret = signature.split("(")[0]
@@ -121,11 +122,12 @@ class RtagsCodeCompleter
   excludeLowerPriority: true
   suggestionPriority: 1
 
-  constructor: (rcExecutor) ->
+  constructor: (rcExecutor, doFuzzyCompletion) ->
     @rcExecutor = rcExecutor
     @currentCompletionLocation = new Point
     @baseCompletionsPromise = null
     @initialPrefix = ""
+    @doFuzzyCompletion = doFuzzyCompletion
 
   # On input autocompletion calls this function
   getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix, activatedManually}) ->
@@ -146,6 +148,9 @@ class RtagsCodeCompleter
     newCompletionLocation = new Point
     newCompletionLocation.row = bufferPosition.row
     newCompletionLocation.column = bufferPosition.column - prefix.length
+
+    savedPrefix = prefix
+    prefix = ""
 
     if prefix[0..@initialPrefix.length - 1] != @initialPrefix and @initialPrefix != ""
       @currentCompletionLocation = new Point
@@ -171,16 +176,22 @@ class RtagsCodeCompleter
           completion = convertCompletion(line)
           if completion
             ret.push(completion)
-        ret
-      , (err) -> [])
+        ret)
+      .catch((err) -> [])
 
-      return @baseCompletionsPromise
-    else
-      return @baseCompletionsPromise.then((completions) ->
-        ret = []
+    return @baseCompletionsPromise.then((completions) =>
+      if (savedPrefix.length == 0)
+        return completions;
+      ret = []
+      if @doFuzzyCompletion
+        ret = filter(completions, savedPrefix, key: 'snippet')
+      else
         for completion in completions
-          if completion.snippet and completion.snippet[0..prefix.length - 1] == prefix
-            completion.replacementPrefix = prefix
+          if completion.snippet and completion.snippet[0..savedPrefix.length - 1] == savedPrefix
             ret.push(completion)
-        ret
-      )
+
+      for completion in ret
+        completion.replacementPrefix = savedPrefix;
+
+      ret
+    )

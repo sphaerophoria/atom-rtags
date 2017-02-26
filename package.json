@@ -14,7 +14,8 @@
     "fs-plus": "2.x",
     "underscore-plus": "1.x",
     "xml2js": "latest",
-    "atom-package-deps": "latest"
+    "atom-package-deps": "latest",
+    "fuzzaldrin-plus": "latest"
   },
   "package-deps": [
     "linter",

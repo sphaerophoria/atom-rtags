@@ -39,6 +39,10 @@ module.exports = AtomRtags =
       type: 'boolean'
       default: 'true'
       description: 'Whether or not to suggest code completions (restart atom to apply)'
+    fuzzyCodeCompletion:
+      type: 'boolean'
+      default: 'true'
+      description: 'When code completion is enabled, whether to fuzzy match the results'
     codeLinting:
       type: 'boolean'
       default: 'true'
@@ -63,7 +67,7 @@ module.exports = AtomRtags =
     @referencesView = new RtagsReferencesTreePane
     @searchView = new RtagsSearchView
     @rcExecutor = new RcExecutor
-    @codeCompletionProvider = new RtagsCodeCompleter(@rcExecutor)
+    @codeCompletionProvider = new RtagsCodeCompleter(@rcExecutor, atom.config.get('atom-rtags-plus.fuzzyCodeCompletion'))
     @linter = new RtagsLinter(@rcExecutor)
     @hyperclickProvider = new RtagsHyperclicker(@rcExecutor)
     @openFileTracker = new OpenFileTracker(@rcExecutor)
@@ -86,6 +90,8 @@ module.exports = AtomRtags =
 
     update_keybinding_mode(atom.config.get('atom-rtags-plus.keybindingStyle'));
     atom.config.observe('atom-rtags-plus.keybindingStyle', (value) => update_keybinding_mode(value))
+
+    atom.config.observe('atom-rtags-plus.fuzzyCodeCompletion', (value) => @codeCompletionProvider.doFuzzyCompletion = value)
 
   deactivate: ->
     @subscriptions?.dispose()
