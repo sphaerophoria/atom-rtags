@@ -7,3 +7,4 @@
     * rdm/linter only start when c/c++ file is opened
 * Keybindings change
 * Add title to modal panels
+* Implement optimization to index last few viewed items first
