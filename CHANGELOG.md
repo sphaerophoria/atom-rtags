@@ -8,3 +8,4 @@
 * Keybindings change
 * Add title to modal panels
 * Implement optimization to index last few viewed items first
+* Improve startup time
