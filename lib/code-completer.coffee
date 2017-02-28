@@ -155,7 +155,7 @@ class RtagsCodeCompleter
     savedPrefix = prefix
     prefix = ""
 
-    if (savedPrefix[0..@initialPrefix.length - 1] != @initialPrefix and @initialPrefix != "") or !@currentCompletionLocation
+    if !@currentCompletionLocation
       @currentCompletionLocation = new n_atom.Point
 
     if @currentCompletionLocation.compare(newCompletionLocation)
