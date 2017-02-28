@@ -12,8 +12,12 @@ namespace TestNamespace {
         void SetMemberVar(int memberVar);
         int GetMemberVar() const;
 
+        /// Public member variable
+        int m_publicMemberVar;
+
     private:
         int PrivateMemberFunc() const;
+        /// Is a member var
         int m_memberVar;
     };
 }

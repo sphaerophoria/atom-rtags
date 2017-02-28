@@ -148,33 +148,25 @@ class RtagsCodeCompleter
     while prefix[0] == "." or prefix[0] == ":"
       prefix = prefix[1..]
 
-    newCompletionLocation = new n_atom.Point
-    newCompletionLocation.row = bufferPosition.row
-    newCompletionLocation.column = bufferPosition.column - prefix.length
+    newCompletionLocation = new n_atom.Point(bufferPosition.row, bufferPosition.column - prefix.length)
 
-    savedPrefix = prefix
-    prefix = ""
-
-    if !@currentCompletionLocation
+    if @currentCompletionLocation == null
       @currentCompletionLocation = new n_atom.Point
 
     if @currentCompletionLocation.compare(newCompletionLocation)
-      @initialPrefix = savedPrefix;
 
+      @currentCompletionLocation = newCompletionLocation.copy()
+
+      editorText = editor.getText()
       # This is a fairly strange edge case. It looks like rtags doesn't like to give us results unless there's a space
       # in some cases (after :: or ->). This seems to resolve the issue. I don't think there's much danger here as any
       # "" prefix will be preceded by either whitespace or a special character which c/c++ should allow...
-      if prefix == ""
-        prefix = " "
-        bufferPosition.column += 1
+      fakePrefix = " "
 
-      editorText = editor.getText()
-      @currentCompletionLocation = newCompletionLocation
       # Asynchronously get results in a promise
-      @baseCompletionsPromise = @rcExecutor.rc_get_completions editor.getPath(), newCompletionLocation, editorText, prefix
+      @baseCompletionsPromise = @rcExecutor.rc_get_completions editor.getPath(), newCompletionLocation, editorText, fakePrefix
       .then((out) ->
         ret = []
-        # TODO: This is terrible to read
         for line in out.split "\n"
           completion = convertCompletion(line)
           if completion
@@ -183,18 +175,18 @@ class RtagsCodeCompleter
       .catch((err) -> [])
 
     return @baseCompletionsPromise.then((completions) =>
-      if (savedPrefix.length == 0)
+      if (prefix.length == 0)
         return completions;
       ret = []
       if @doFuzzyCompletion
-        ret = n_fuzzaldrin.filter(completions, savedPrefix, key: 'snippet')
+        ret = n_fuzzaldrin.filter(completions, prefix, key: 'snippet')
       else
         for completion in completions
-          if completion.snippet and completion.snippet[0..savedPrefix.length - 1] == savedPrefix
+          if completion.snippet and completion.snippet[0..prefix.length - 1] == prefix
             ret.push(completion)
 
       for completion in ret
-        completion.replacementPrefix = savedPrefix;
+        completion.replacementPrefix = prefix;
 
       ret
     )

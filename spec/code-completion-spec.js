@@ -3,20 +3,37 @@ const RtagsCodeCompleter = require('../lib/code-completer.coffee')
 const {Point} = require('atom')
 const child_process = require('child_process')
 
-describe( "Code completion", function() {
-    beforeEach( function() {
-        atom.config.set('atom-rtags-plus.rcCommand', 'rc')
-        atom.config.set('atom-rtags-plus.codeCompletion', true)
-    })
+let ensureResults = function(suggestions) {
+    if (suggestions[0].snippet === undefined) {
+        throw "No snippet"
+    }
+};
 
+
+describe( "Code completion", function() {
     var rcExecutor = new RcExecutor();
     rcExecutor.start_rc_worker();
 
-    it("should provide results", function () {
-        let finished = false;
-        let codeCompleter = new RtagsCodeCompleter()
-        codeCompleter.setRcExecutor(rcExecutor);
+    var codeCompleter;
+    var finished;
 
+    beforeEach( function() {
+        atom.config.set('atom-rtags-plus.rcCommand', 'rc')
+        atom.config.set('atom-rtags-plus.codeCompletion', true)
+
+        finished = false;
+        codeCompleter = new RtagsCodeCompleter();
+        codeCompleter.setRcExecutor(rcExecutor);
+    })
+
+    afterEach( function () {
+        waitsFor(function() {
+            return finished;
+        }, "should execute reasonably quickly", 1000);
+    })
+
+
+    it("should provide results", function () {
         runs(function() {
             return atom.workspace.open("cppsrc/test.cpp")
             .then((editor) => {
@@ -27,17 +44,9 @@ describe( "Code completion", function() {
             })
             .then(() => finished = true);
         })
-
-        waitsFor(function() {
-            return finished;
-        }, "should execute reasonably quickly", 1000);
     });
 
     it("should provide correct completions", function() {
-        let finished = false;
-        let codeCompleter = new RtagsCodeCompleter()
-        codeCompleter.setRcExecutor(rcExecutor);
-
         runs(function() {
             return atom.workspace.open("cppsrc/test.cpp")
             .then((editor) => {
@@ -54,25 +63,11 @@ describe( "Code completion", function() {
             })
             .then(() => finished = true);
         })
-
-        waitsFor(function() {
-            return finished;
-        }, "should execute reasonably quickly", 1000);
     });
 
     it ("should only execute rc once for the same input", function () {
-        let finished = false;
-        let codeCompleter = new RtagsCodeCompleter()
-        codeCompleter.setRcExecutor(rcExecutor);
-
         runs(function() {
             let editor = null;
-            let ensureResults = function(suggestions) {
-                if (suggestions[0].snippet === undefined) {
-                    throw "No snippet"
-                }
-            };
-
             return atom.workspace.open("cppsrc/test.cpp")
             .then((promiseEditor) => {
                 editor = promiseEditor;
@@ -96,17 +91,59 @@ describe( "Code completion", function() {
             })
             .then(() => finished = true);
         })
-
-        waitsFor(function() {
-            return finished;
-        }, "should execute reasonably quickly", 1000);
     });
 
     it("should provide completions after a ., :: and ->", function() {
-        //FIXME: Not implemented
+        runs(function() {
+            let editor = null;
+            return atom.workspace.open("cppsrc/test.cpp")
+            .then((promiseEditor) => {
+                editor = promiseEditor;
+                editor.setCursorBufferPosition(new Point(13, 0))
+                let prefix = "TestNamespace::"
+                editor.insertText(prefix, {autoIndent: false});
+                return codeCompleter.getSuggestions({editor, bufferPosition: new Point(13, prefix.length), scopeDescriptor: null, prefix: "::", activatedManually: false})
+            })
+            .then((suggestions) => {
+                expect(() => ensureResults(suggestions)).not.toThrow()
+                editor.deleteToBeginningOfLine();
+                let prefix = "pTestClass->"
+                editor.insertText(prefix, {autoIndent: false});
+                return codeCompleter.getSuggestions({editor, bufferPosition: new Point(13, prefix.length), scopeDescriptor: null, prefix: "", activatedManually: false})
+            })
+            .then((suggestions) => {
+                expect(() => ensureResults(suggestions)).not.toThrow()
+                editor.deleteToBeginningOfLine();
+                let prefix = "(*pTestClass)."
+                editor.insertText(prefix, {autoIndent: false});
+                return codeCompleter.getSuggestions({editor, bufferPosition: new Point(13, prefix.length), scopeDescriptor: null, prefix: ".", activatedManually: false})
+            })
+            .then((suggestions) => {
+                expect(() => ensureResults(suggestions)).not.toThrow()
+            })
+            .then(() => finished = true);
+        })
     })
 
     it("should parse correctly on doxygen commented variables", function() {
-        //FIXME: Not implemented
+        runs(function() {
+            let editor = null;
+            return atom.workspace.open("cppsrc/test.cpp")
+            .then((promiseEditor) => {
+                editor = promiseEditor;
+                editor.setCursorBufferPosition(new Point(13, 0))
+                let prefix = "pTestClass->m_publicMemberV"
+                let item = "m_publicMemberV"
+                editor.insertText(prefix, {autoIndent: false});
+                return codeCompleter.getSuggestions({editor, bufferPosition: new Point(13, prefix.length), scopeDescriptor: null, prefix: item, activatedManually: false})
+            })
+            .then((suggestions) => {
+                expect(suggestions[0].snippet).toBe("m_publicMemberVar");
+                expect(suggestions[0].leftLabel).toBe("int");
+                expect(suggestions[0].rightLabel).toBe("FieldDecl")
+                expect(suggestions[0].type).toBe("variable")
+            })
+            .then(() => finished = true);
+        })
     })
 })
