@@ -1,0 +1,46 @@
+--- lib/code-completer.coffee
++++ lib/code-completer.coffee
+@@ -62,22 +62,20 @@ convertCompletion = (completionLine) ->
+   # Looks like the format is (note the two spaces at the end)
+   # <completion> <signature> <type>  <parent>
+ 
+-  completionLine = completionLine.trim()
+-  if completionLine == "macro definition"
++  # Only trim left side because we need to keep right side to detect parent
++  completionLine = completionLine?.trimLeft()
++  if completionLine?.trim() == "macro definition"
+     return null
+-  if completionLine?.length == 0
++  if completionLine?.trim().length == 0
+     return null
+   splitIdx = completionLine.indexOf(' ');
+   completion = completionLine[0..splitIdx-1]
+   completionLine = completionLine[splitIdx+1..]
+ 
+   # Parent exists if the last space is preceded by another space
+-  splitIdx = completionLine.lastIndexOf(' ')
+-  splitIdxTwo = completionLine.lastIndexOf(' ', splitIdx-1)
+-  parent = null
+-  if splitIdx == splitIdxTwo + 1
+-    parent = completionLine[splitIdx+1..]
+-    completionLine = completionLine[..splitIdxTwo-1]
++  splitIdx = completionLine.lastIndexOf('  ')
++  parent = completionLine[splitIdx+1..].trim()
++  completionLine = completionLine[..splitIdx].trim()
+ 
+   # Have to handle edge case where type is multi-word string macro definition
+   macroDefStr = "macro definition"
+@@ -156,11 +154,11 @@ class RtagsCodeCompleter
+     savedPrefix = prefix
+     prefix = ""
+ 
+-    if (prefix[0..@initialPrefix.length - 1] != @initialPrefix and @initialPrefix != "") or !@currentcompletionLocation
++    if (savedPrefix[0..@initialPrefix.length - 1] != @initialPrefix and @initialPrefix != "") or !@currentCompletionLocation
+       @currentCompletionLocation = new n_atom.Point
+ 
+     if @currentCompletionLocation.compare(newCompletionLocation)
+-      @initialPrefix = prefix;
++      @initialPrefix = savedPrefix;
+ 
+       # This is a fairly strange edge case. It looks like rtags doesn't like to give us results unless there's a space
+       # in some cases (after :: or ->). This seems to resolve the issue. I don't think there's much danger here as any

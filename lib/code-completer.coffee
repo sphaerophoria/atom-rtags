@@ -157,14 +157,8 @@ class RtagsCodeCompleter
 
       @currentCompletionLocation = newCompletionLocation.copy()
 
-      editorText = editor.getText()
-      # This is a fairly strange edge case. It looks like rtags doesn't like to give us results unless there's a space
-      # in some cases (after :: or ->). This seems to resolve the issue. I don't think there's much danger here as any
-      # "" prefix will be preceded by either whitespace or a special character which c/c++ should allow...
-      fakePrefix = " "
-
       # Asynchronously get results in a promise
-      @baseCompletionsPromise = @rcExecutor.rc_get_completions editor.getPath(), newCompletionLocation, editorText, fakePrefix
+      @baseCompletionsPromise = @rcExecutor.rc_get_completions editor.getPath(), newCompletionLocation, editor.getText(), ""
       .then((out) ->
         ret = []
         for line in out.split "\n"
