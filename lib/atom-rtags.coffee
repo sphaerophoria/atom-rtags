@@ -67,6 +67,7 @@ module.exports = AtomRtags =
       @openFileTracker = new OpenFileTracker(@rcExecutor)
       @codeCompletionProvider.setRcExecutor(@rcExecutor)
       @hyperclickProvider.setRcExecutor(@rcExecutor)
+      @hyperclickProvider.setActionExecutor(@)
 
       if (@indieRegistry)
         @linter.registerLinter(@indieRegistry)
