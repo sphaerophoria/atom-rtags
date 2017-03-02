@@ -1,3 +1,7 @@
+# 1.4.0
+* Add more mouse navigiation options!
+* Code completion improvements
+
 # 1.3.0
 * Responsiveness improvements
 * Code completion improvements
