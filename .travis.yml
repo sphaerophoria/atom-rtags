@@ -1,0 +1,62 @@
+### Project specific config ###
+language: generic
+
+env:
+  global:
+    - APM_TEST_PACKAGES=""
+    - ATOM_LINT_WITH_BUNDLED_NODE="true"
+
+  matrix:
+    - ATOM_CHANNEL=stable
+    - ATOM_CHANNEL=beta
+
+os:
+  - linux
+
+### Generic setup follows ###
+script:
+  - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-5 /usr/bin/gcc
+  - sudo unlink /usr/bin/g++ && sudo ln -s /usr/bin/g++-5 /usr/bin/g++
+  - sudo unlink /usr/bin/c++ && sudo ln -s /usr/bin/c++-5 /usr/bin/c++
+  - git clone https://github.com/Andersbakken/rtags.git
+  - cd rtags
+  - git checkout v2.8
+  - git submodule update --init
+  - mkdir build
+  - cd build && cmake ../ -DRTAGS_NO_ELISP_FILES=true
+  - make -j2
+  - sudo make install
+  - mkdir ~/.rtags
+  - sudo mount -t tmpfs tmpfs ~/.rtags
+  - rdm >/dev/null 2>&1 &
+  - cd ../../
+  - mkdir atom-build
+  - cd atom-build 
+  - cmake ../spec/fixtures/cppsrc -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+  - rc -J . 
+  - sleep 1
+  - cd ..
+  - curl -s -O https://raw.githubusercontent.com/atom/ci/master/build-package.sh
+  - chmod u+x build-package.sh
+  - ./build-package.sh
+
+notifications:
+  email:
+    on_success: never
+    on_failure: change
+
+git:
+  depth: 10
+
+sudo: required
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-5
+      - build-essential
+      - git
+      - libgnome-keyring-dev
+      - fakeroot

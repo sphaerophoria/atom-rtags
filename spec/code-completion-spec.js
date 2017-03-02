@@ -37,10 +37,12 @@ describe( "Code completion", function() {
         runs(function() {
             return atom.workspace.open("cppsrc/test.cpp")
             .then((editor) => {
-                return codeCompleter.getSuggestions({editor, bufferPosition: new Point(8, 1), scopeDescriptor: null, prefix: "T", activatedManually: false})
+                editor.setCursorBufferPosition(new Point(10,0))
+                editor.insertText("T", {autoIndent: false});
+                return codeCompleter.getSuggestions({editor, bufferPosition: new Point(10, 1), scopeDescriptor: null, prefix: "T", activatedManually: false})
             })
             .then((suggestions) => {
-                expect(suggestions.length).not.toBe(0);
+                expect(() => ensureResults(suggestions)).not.toThrow();
             })
             .then(() => finished = true);
         })
@@ -71,20 +73,25 @@ describe( "Code completion", function() {
             return atom.workspace.open("cppsrc/test.cpp")
             .then((promiseEditor) => {
                 editor = promiseEditor;
-                return codeCompleter.getSuggestions({editor, bufferPosition: new Point(10, 0), scopeDescriptor: null, prefix: "T", activatedManually: false});
+                editor.setCursorBufferPosition(new Point(10,0))
+                editor.insertText("T", {autoIndent: false});
+                return codeCompleter.getSuggestions({editor, bufferPosition: new Point(10, 1), scopeDescriptor: null, prefix: "T", activatedManually: false});
             })
             .then((suggestions) => {
-                expect(() => ensureResults(suggestions)).not.toThrow()
+                expect(() => ensureResults(suggestions)).not.toThrow();
             })
             .then(() => {
                 codeCompleter.setRcExecutor(null);
-                return codeCompleter.getSuggestions({editor, bufferPosition: new Point(10, 1), scopeDescriptor: null, prefix: "Te", activatedManually: false});
+                editor.insertText("e", {autoIndent: false});
+                return codeCompleter.getSuggestions({editor, bufferPosition: new Point(10, 2), scopeDescriptor: null, prefix: "Te", activatedManually: false});
             })
             .then((suggestions) => {
                 expect(() => ensureResults(suggestions)).not.toThrow()
             })
             .then( () => {
-                return codeCompleter.getSuggestions({editor, bufferPosition: new Point(10, 0), scopeDescriptor: null, prefix: "s", activatedManually: false});
+                editor.deleteToBeginningOfLine();
+                editor.insertText("s");
+                return codeCompleter.getSuggestions({editor, bufferPosition: new Point(10, 1), scopeDescriptor: null, prefix: "s", activatedManually: false});
             })
             .then((suggestions) => {
                 expect(() => ensureResults(suggestions)).not.toThrow()

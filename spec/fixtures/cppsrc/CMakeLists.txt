@@ -1,6 +1,6 @@
 
-cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
+cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 project(atom-rtags-plus-test)
-set(CMAKE_CXX_STANDARD 14)
 
 add_executable(testapp test.cpp TestClass.cpp)
+set_target_properties(testapp PROPERTIES COMPILE_FLAGS "-std=c++11")

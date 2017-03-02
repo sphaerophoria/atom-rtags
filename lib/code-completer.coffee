@@ -166,7 +166,9 @@ class RtagsCodeCompleter
           if completion
             ret.push(completion)
         ret)
-      .catch((err) -> [])
+      .catch((err) ->
+        console.error(err)
+        [])
 
     return @baseCompletionsPromise.then((completions) =>
       if (prefix.length == 0)
