@@ -59,7 +59,7 @@ module.exports = AtomRtags =
     Promise.resolve().then(() =>
       require('atom-package-deps').install('atom-rtags-plus')
 
-      {RtagsLinter} = require './linter.coffee'
+      {RtagsLinter} = require './linter.js'
       {RcExecutor} = require './rtags'
       {OpenFileTracker} = require('./open-file-tracker')
       @rcExecutor = new RcExecutor
