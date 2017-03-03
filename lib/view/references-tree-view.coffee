@@ -1,5 +1,6 @@
 {$, View} = require 'space-pen'
 rtags = require '../rtags'
+util = require '../util'
 
 module.exports.Node =
     class Node extends View
@@ -106,7 +107,16 @@ class RtagsReferenceNode extends Node
       @expander.hide()
 
     contentView = $(document.createElement('td')).addClass('text-highlight').css('white-space', 'nowrap').width('100%')
-    contentView.text("#{content}")
+
+    #TODO: This can be removed on resoution of https://github.com/Andersbakken/rtags/issues/911
+    if atom.config.get('atom-rtags-plus.liveParsing')
+      textBufferPromise = util.getTextBuffer(@data.path)
+
+      textBufferPromise.then((textBuffer) =>
+        contentView.text(textBuffer.lineForRow(@line))
+      )
+    else
+      contentView.text(content)
 
     [keyView, spacer, contentView]
 

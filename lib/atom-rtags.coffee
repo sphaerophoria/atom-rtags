@@ -47,6 +47,11 @@ module.exports = AtomRtags =
         {value: 2, description: 'Vim style keymap'}
         {value: 3, description: 'Define your own'}
       ]
+    liveParsing:
+      type: 'boolean'
+      default: 'true'
+      description: 'Continuously parse files without saving'
+
 
   subscriptions: null
 
@@ -62,15 +67,20 @@ module.exports = AtomRtags =
       {RtagsLinter} = require './linter.js'
       {RcExecutor} = require './rtags'
       {OpenFileTracker} = require('./open-file-tracker')
+      {ModifiedFileTracker} = require('./modified-file-tracker')
       @rcExecutor = new RcExecutor
       @linter = new RtagsLinter(@rcExecutor)
       @openFileTracker = new OpenFileTracker(@rcExecutor)
+      @modifiedFileTracker = new ModifiedFileTracker(@rcExecutor);
       @codeCompletionProvider.setRcExecutor(@rcExecutor)
       @hyperclickProvider.setRcExecutor(@rcExecutor)
       @hyperclickProvider.setActionExecutor(@)
 
       if (@indieRegistry)
         @linter.registerLinter(@indieRegistry)
+
+      @modifiedFileTracker.setEnabled(atom.config.get('atom-rtags-plus.liveParsing'));
+      atom.config.observe('atom-rtags-plus.liveParsing', @modifiedFileTracker.setEnabled.bind(@modifiedFileTracker));
 
       @codeCompletionProvider.doFuzzyCompletion = atom.config.get('atom-rtags-plus.fuzzyCodeCompletion')
       @subscriptions.push atom.config.observe('atom-rtags-plus.fuzzyCodeCompletion', (value) => @codeCompletionProvider.doFuzzyCompletion = value)
