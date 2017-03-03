@@ -2,6 +2,9 @@
 * Add more mouse navigiation options!
 * Code completion improvements
 
+# 1.3.1
+* Fix linter messages never being shown for some files
+
 # 1.3.0
 * Responsiveness improvements
 * Code completion improvements
