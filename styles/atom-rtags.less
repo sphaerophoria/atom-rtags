@@ -9,3 +9,21 @@
     background-color: @panel-heading-background-color
   }
 }
+
+atom-text-editor::shadow .linter-highlight, .linter-highlight {
+  &.fixit {
+    /* Style for Message Badges */
+    &:not(.line-number) {
+      background-color: @background-color-success;
+      color: white;
+    }
+    /* Style for Gutter */
+    .linter-gutter {
+      color: @background-color-success;
+    }
+    /* Style for the text editor highlight */
+    .region {
+      border-bottom: 1px dashed @background-color-success;
+    }
+  }
+}
