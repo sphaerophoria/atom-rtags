@@ -51,6 +51,12 @@ module.exports = AtomRtags =
       type: 'boolean'
       default: 'true'
       description: 'Continuously parse files without saving'
+    liveParseFileTypes:
+      type: 'array',
+      default: ['source.cpp', 'source.c'],
+      items:
+        type: 'string'
+      description: 'File types for live parsing (default omits headers to avoid massive cpu usage)'
 
 
   subscriptions: null
@@ -71,16 +77,13 @@ module.exports = AtomRtags =
       @rcExecutor = new RcExecutor
       @linter = new RtagsLinter(@rcExecutor)
       @openFileTracker = new OpenFileTracker(@rcExecutor)
-      @modifiedFileTracker = new ModifiedFileTracker(@rcExecutor);
+      @modifiedFileTracker = new ModifiedFileTracker(@rcExecutor, atom.config.get('atom-rtags-plus.liveParseFileTypes'))
       @codeCompletionProvider.setRcExecutor(@rcExecutor)
       @hyperclickProvider.setRcExecutor(@rcExecutor)
       @hyperclickProvider.setActionExecutor(@)
 
       if (@indieRegistry)
         @linter.registerLinter(@indieRegistry)
-
-      @modifiedFileTracker.setEnabled(atom.config.get('atom-rtags-plus.liveParsing'));
-      atom.config.observe('atom-rtags-plus.liveParsing', @modifiedFileTracker.setEnabled.bind(@modifiedFileTracker));
 
       @codeCompletionProvider.doFuzzyCompletion = atom.config.get('atom-rtags-plus.fuzzyCodeCompletion')
       @subscriptions.push atom.config.observe('atom-rtags-plus.fuzzyCodeCompletion', (value) => @codeCompletionProvider.doFuzzyCompletion = value)
@@ -99,7 +102,12 @@ module.exports = AtomRtags =
       #@subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:get-tokens': => @get_tokens()
 
       updateKeybindingMode(atom.config.get('atom-rtags-plus.keybindingStyle'));
-      @subscriptions.push atom.config.observe('atom-rtags-plus.keybindingStyle', (value) => updateKeybindingMode(value)))
+      @subscriptions.push atom.config.observe('atom-rtags-plus.keybindingStyle', (value) => updateKeybindingMode(value))
+
+      @subscriptions.push atom.config.observe('atom-rtags-plus.liveParsing', @modifiedFileTracker.setEnabled.bind(@modifiedFileTracker))
+      @subscriptions.push atom.config.observe('atom-rtags-plus.liveParseFileTypes', @modifiedFileTracker.setAcceptableScopes.bind(@modifiedFileTracker))
+    )
+
 
   deactivate: ->
     for subscription in @subscriptions
