@@ -33,3 +33,4 @@
   'space r R': 'atom-rtags-plus:refactor-at-point'
   'space r V': 'atom-rtags-plus:reindex-current-file'
   'space r i': 'atom-rtags-plus:get-symbol-info'
+  'space r f': 'atom-rtags-plus:apply-fixit'

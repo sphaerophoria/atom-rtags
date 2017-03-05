@@ -5,6 +5,7 @@ n_rtagsSearchView = lazyreq('./view/rtags-search-view.coffee')
 RtagsCodeCompleter = require('./code-completer.coffee')
 n_rtagsHyperClicker = lazyreq('./rtags-hyperclicker.js')
 n_util = lazyreq('./util.js')
+n_atom = lazyreq('atom')
 
 updateKeybindingMode = (value) ->
   workspace = document.getElementsByTagName("atom-workspace")[0]
@@ -100,6 +101,7 @@ module.exports = AtomRtags =
       #@subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:get-subclasses': => @get_subclasses()
       @subscriptions.push atom.commands.add 'atom-workspace', 'atom-rtags-plus:get-symbol-info': => @getSymbolInfo()
       #@subscriptions.add atom.commands.add 'atom-workspace', 'atom-rtags-plus:get-tokens': => @get_tokens()
+      @subscriptions.push atom.commands.add 'atom-workspace', 'atom-rtags-plus:apply-fixit': => @applyFixit()
 
       updateKeybindingMode(atom.config.get('atom-rtags-plus.keybindingStyle'));
       @subscriptions.push atom.config.observe('atom-rtags-plus.keybindingStyle', (value) => updateKeybindingMode(value))
@@ -262,4 +264,19 @@ module.exports = AtomRtags =
     return if not n_util.matched_scope(active_editor)
     @rcExecutor.get_tokens(active_editor.getPath()).then((out) =>
       console.log(out))
+    .catch((err) -> atom.notifications.addError(err))
+
+  applyFixit: ->
+    activeEditor = atom.workspace.getActiveTextEditor()
+    return if not activeEditor or not n_util.matched_scope(activeEditor)
+    position = activeEditor.getCursorBufferPosition()
+    wordRange = activeEditor.getLastCursor().getCurrentWordBufferRange();
+    @rcExecutor.get_fixits(activeEditor.getPath()).then((fixits) =>
+      for fixit in fixits
+        if fixit.location.isEqual(wordRange.start)
+          fixRangeEnd = new n_atom.Point(fixit.location.row, fixit.location.column + fixit.length)
+          fixRange = new n_atom.Range(fixit.location, fixRangeEnd)
+          activeEditor.getBuffer().setTextInRange(fixRange, fixit.fix)
+          break;
+    )
     .catch((err) -> atom.notifications.addError(err))
