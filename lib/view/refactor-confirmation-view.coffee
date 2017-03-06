@@ -78,7 +78,7 @@ module.exports.RtagsRefactorConfirmationPane =
         if !node.isChecked()
           continue
 
-        editorPromise = atom.workspace.open(node.data.path, {activateItem: false})
+        editorPromise = util.getTextEditor(node.data.path);
         for childNode in node.data.refactorLines
           if !childNode.isChecked()
             continue
