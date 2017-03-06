@@ -1,7 +1,8 @@
 {$, View} = require 'space-pen'
-{TextBuffer} = require 'atom'
+{Point, TextBuffer} = require 'atom'
 {Node, HeaderView, RtagsTreeView, ResizeHandleView} = require './references-tree-view'
 child_process = require 'child_process'
+util = require '../util.js'
 
 
 #TODO: There's a lot of duplication from the RtagsReferencesTreePane here.
@@ -11,11 +12,25 @@ module.exports.RtagsRefactorConfirmationNode =
       @checkbox = $('<input>').attr('type', 'checkbox').prop('checked', true)
       if !@data.refactorLines
         @expander.hide()
-        # Here we open a textBuffer and grab the line
-        buffer = new TextBuffer({filePath: @data.path})
-        buffer.loadSync()
-        lineStr = buffer.lineForRow(@data.refactorLineLoc.line - 1)
-        return [$('<span>').append(@checkbox),  $('<td>').text(lineStr)]
+
+        bufferPromise = null
+        if atom.config.get('atom-rtags-plus.liveParsing')
+          bufferPromise = util.getTextBuffer(@data.path)
+        else
+          bufferPromise = Promise.resolve()
+          .then(() =>
+            buffer = new TextBuffer({filePath: @data.path})
+            buffer.loadSync()
+            return buffer
+          )
+
+        lineTd = $('<td>')
+        bufferPromise.then((buffer) =>
+          lineStr = buffer.lineForRow(@data.refactorLineLoc.row - 1)
+          lineTd.text(lineStr)
+        )
+        console.log(@data.path, @data.refactorLineLoc)
+        return [$('<span>').append(@checkbox), lineTd]
       else
         # Here we prep the children for later
         ret = [];
@@ -63,17 +78,27 @@ module.exports.RtagsRefactorConfirmationPane =
         if !node.isChecked()
           continue
 
-        cmdStr = 'sed -i \''
+        editorPromise = atom.workspace.open(node.data.path, {activateItem: false})
         for childNode in node.data.refactorLines
           if !childNode.isChecked()
             continue
-          cmdStr += childNode.data.refactorLineLoc.line
-          cmdStr += 's/^\\(.\\{'
-          cmdStr += parseInt(childNode.data.refactorLineLoc.col, 10) - 1
-          cmdStr += '\\}\\)[a-zA-Z0-9_]*/\\1' + node.data.replacement + '/;'
-        cmdStr += '\' ' + node.data.path
-        # Shell out to sed to do the replacement console.log(cmdStr)
-        child_process.exec(cmdStr)
+
+          # This do prevents variables in the promise from being overwritten in
+          # the next iteration of the loop
+          do (childNode, node, editorPromise) ->
+            editorPromise = editorPromise.then((editor) =>
+              # If we're currently in a modified buffer, we don't want to apply
+              # potentially unsaved changes, however we don't want to force people
+              # to save in files they haven't touched yet
+              saveAfterChange = !editor.isModified()
+              cursor = editor.getLastCursor()
+              editor.setCursorBufferPosition(new Point(childNode.data.refactorLineLoc.row - 1, childNode.data.refactorLineLoc.column - 1))
+              wordRange = util.getCurrentWordBufferRange(editor);
+              editor.setTextInBufferRange(wordRange, node.data.replacement);
+              if saveAfterChange
+                editor.save();
+              return editor
+            )
       @destroy()
 
     cancel: ->

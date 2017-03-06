@@ -269,8 +269,7 @@ module.exports = AtomRtags =
   applyFixit: ->
     activeEditor = atom.workspace.getActiveTextEditor()
     return if not activeEditor or not n_util.matched_scope(activeEditor)
-    position = activeEditor.getCursorBufferPosition()
-    wordRange = activeEditor.getLastCursor().getCurrentWordBufferRange();
+    wordRange = n_util.getCurrentWordBufferRange(activeEditor)
     @rcExecutor.get_fixits(activeEditor.getPath()).then((fixits) =>
       for fixit in fixits
         if fixit.location.isEqual(wordRange.start)
