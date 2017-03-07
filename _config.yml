@@ -1,0 +1,11 @@
+title: atom-rtags-plus
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "https://sphaerophoria.github.io/atom-rtags-plus" # the base hostname & protocol for your site, e.g. http://example.com
+github_username: sphaerophoria
+
+# Build settings
+markdown: kramdown
+theme: minima
+exclude:
+  - Gemfile
+  - Gemfile.lock
