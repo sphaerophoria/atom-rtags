@@ -10,31 +10,31 @@ atom-rtags-plus is a plugin designed to give IDE features without having to use 
 ## Features
 
 ### Jump to definition
-{% video /resources/jump-to-definition.webm 600 %}
+<video preload="metadata" controls="" width="600"><source src="/resources/jump-to-definition.webm" type="video/webm"></video>
 
 ### Find virtual overloads
-{% video /resources/find-virtuals.webm 600 %}
+<video preload="metadata" controls="" width="600"><source src="/resources/find-virtuals.webm"  type="video/webm"></video>
 
 ### Find references
-{% video /resources/references-tree.webm 600 %}
+<video preload="metadata" controls="" width="600"><source src="/resources/references-tree.webm"  type="video/webm"></video>
 
 ### Mouse navigation
-{% video /resources/mouse-navigation.webm 600 %}
+<video preload="metadata" controls="" width="600"><source src="/resources/mouse-navigation.webm"  type="video/webm"></video>
 
 ### Code completion
-{% video /resources/code-completion.webm 600 %}
+<video preload="metadata" controls="" width="600"><source src="/resources/code-completion.webm"  type="video/webm"></video>
 
 ### Find symbol by name
-{% video /resources/find-symbol.webm 600 %}
+<video preload="metadata" controls="" width="600"><source src="/resources/find-symbol.webm"  type="video/webm"></video>
 
 ### Refactor!
-{% video /resources/refactor.webm 600 %}
+<video preload="metadata" controls="" width="600"><source src="/resources/refactor.webm"  type="video/webm"></video>
 
 ### Get symbol info
-{% video /resources/symbol-info.webm 600 %}
+<video preload="metadata" controls="" width="600"><source src="/resources/symbol-info.webm"  type="video/webm"></video>
 
 ### Live Linting
-{% video /resources/live-linting.webm 600 %}
+<video preload="metadata" controls="" width="600"><source src="/resources/live-linting.webm"  type="video/webm"></video>
 
 ### Apply fixits
-{% video /resources/fixits.webm 600 %}
+<video preload="metadata" controls="" width="600"><source src="/resources/fixits.webm"  type="video/webm"></video>
