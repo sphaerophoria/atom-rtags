@@ -1,6 +1,8 @@
 # 1.4.0
 * Add more mouse navigiation options!
 * Code completion improvements
+* Live linting
+* General performance improvements
 
 # 1.3.1
 * Fix linter messages never being shown for some files
