@@ -29,7 +29,6 @@ module.exports.RtagsRefactorConfirmationNode =
           lineStr = buffer.lineForRow(@data.refactorLineLoc.row - 1)
           lineTd.text(lineStr)
         )
-        console.log(@data.path, @data.refactorLineLoc)
         return [$('<span>').append(@checkbox), lineTd]
       else
         # Here we prep the children for later
@@ -92,7 +91,14 @@ module.exports.RtagsRefactorConfirmationPane =
               # to save in files they haven't touched yet
               saveAfterChange = !editor.isModified()
               cursor = editor.getLastCursor()
-              editor.setCursorBufferPosition(new Point(childNode.data.refactorLineLoc.row - 1, childNode.data.refactorLineLoc.column - 1))
+              refactorLoc = new Point(childNode.data.refactorLineLoc.row - 1, childNode.data.refactorLineLoc.column - 1)
+              editor.setCursorBufferPosition(refactorLoc)
+
+              # Edge case for destructors
+              rowTxt = editor.lineTextForBufferRow(refactorLoc.row)
+              if rowTxt[refactorLoc.column] == '~'
+                editor.moveRight()
+
               wordRange = util.getCurrentWordBufferRange(editor);
               editor.setTextInBufferRange(wordRange, node.data.replacement);
               if saveAfterChange
