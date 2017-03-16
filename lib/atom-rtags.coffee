@@ -83,8 +83,8 @@ module.exports = AtomRtags =
       @hyperclickProvider.setRcExecutor(@rcExecutor)
       @hyperclickProvider.setActionExecutor(@)
 
-      if (@indieRegistry)
-        @linter.registerLinter(@indieRegistry)
+      if (@registerIndie)
+        @linter.registerLinter(@registerIndie)
 
       @codeCompletionProvider.doFuzzyCompletion = atom.config.get('atom-rtags-plus.fuzzyCodeCompletion')
       @subscriptions.push atom.config.observe('atom-rtags-plus.fuzzyCodeCompletion', (value) => @codeCompletionProvider.doFuzzyCompletion = value)
@@ -122,9 +122,9 @@ module.exports = AtomRtags =
 
   # Toplevel function for linting. Provides a callback for every time rtags diagnostics outputs data
   # On new data we update the linter with our newly received results.
-  consumeLinter: (indieRegistry) ->
-    @indieRegistry = indieRegistry
-    @linter?.registerLinter(@indieRegistry)
+  consumeLinter: (registerIndie) ->
+    @registerIndie = registerIndie
+    @linter?.registerLinter(@registerIndie)
 
   # This is our autocompletion function.
   getCompletionProvider: ->
