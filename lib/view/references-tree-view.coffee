@@ -165,8 +165,8 @@ class ResizeHandleView extends View
 module.exports.HeaderView =
 class HeaderView extends View
   @content: (params) ->
-      @tag 'header', outlet: 'header', =>
-        @h2 params.title, style: 'display: inline-block;'
+      @tag 'header', class: 'rtags-references-table-header', outlet: 'header', =>
+        @span params.title
         @span class: 'icon icon-x pull-right', click: 'destroy'
 
   destroy: ->
