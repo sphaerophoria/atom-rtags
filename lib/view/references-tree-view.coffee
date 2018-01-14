@@ -198,7 +198,7 @@ class RtagsTreeView extends View
 module.exports.RtagsReferencesTreePane =
 class RtagsReferencesTreePane extends View
   @content: ->
-    @div =>
+    @div style: 'padding: 0 10px', =>
       @subview 'resizeHandle', new ResizeHandleView
       @subview 'header', new HeaderView(title: "Rtags References")
       @subview 'referencesTree', new RtagsTreeView
