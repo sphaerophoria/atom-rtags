@@ -137,7 +137,7 @@ class RtagsReferenceNode extends Node
 module.exports.ResizeHandleView =
 class ResizeHandleView extends View
   @content: ->
-    @div style: 'height: 8px; cursor: row-resize', mouseDown: 'resizeStarted', mouseUp: 'resizeStopped'
+    @div style: 'height: 4px; cursor: row-resize', mouseDown: 'resizeStarted', mouseUp: 'resizeStopped'
 
   initialize: (vertical=true) ->
     @vertical = vertical
