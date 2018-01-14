@@ -137,7 +137,7 @@ class RtagsReferenceNode extends Node
 module.exports.ResizeHandleView =
 class ResizeHandleView extends View
   @content: ->
-    @div style: 'height: 8px; cursor: row-resize', mouseDown: 'resizeStarted', mouseUp: 'resizeStopped'
+    @div style: 'height: 4px; cursor: row-resize', mouseDown: 'resizeStarted', mouseUp: 'resizeStopped'
 
   initialize: (vertical=true) ->
     @vertical = vertical
@@ -165,8 +165,8 @@ class ResizeHandleView extends View
 module.exports.HeaderView =
 class HeaderView extends View
   @content: (params) ->
-      @tag 'header', outlet: 'header', =>
-        @h2 params.title, style: 'display: inline-block;'
+      @tag 'header', class: 'rtags-references-table-header', outlet: 'header', =>
+        @span params.title
         @span class: 'icon icon-x pull-right', click: 'destroy'
 
   destroy: ->
@@ -198,7 +198,7 @@ class RtagsTreeView extends View
 module.exports.RtagsReferencesTreePane =
 class RtagsReferencesTreePane extends View
   @content: ->
-    @div =>
+    @div style: 'padding: 0 10px', =>
       @subview 'resizeHandle', new ResizeHandleView
       @subview 'header', new HeaderView(title: "Rtags References")
       @subview 'referencesTree', new RtagsTreeView
